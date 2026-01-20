@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinning Top Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            background: radial-gradient(ellipse at center, #2a2a4a 0%, #1a1a2e 100%);
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 1em;
+            margin: 15px 0 10px;
+            color: #48dbfb;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #48dbfb;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 35px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        select option {
+            background: #1a1a2e;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-spin {
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .btn-stop {
+            background: linear-gradient(90deg, #576574, #8395a7);
+            color: #fff;
+        }
+
+        .btn-reset {
+            background: linear-gradient(90deg, #48dbfb, #0abde3);
+            color: #1a1a2e;
+        }
+
+        .stats {
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .stats div {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+
+        .stats span:last-child {
+            color: #48dbfb;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .preset-btn {
+            padding: 8px;
+            font-size: 0.8em;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            margin-top: 0;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .instructions {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="canvas" width="600" height="600"></canvas>
+        </div>
+
+        <div class="controls">
+            <h1>Spinning Top Lab</h1>
+
+            <h2>Physics</h2>
+            <div class="control-group">
+                <label>Spin Speed: <span id="speedValue">50</span> RPM</label>
+                <input type="range" id="speed" min="0" max="200" value="50">
+            </div>
+            <div class="control-group">
+                <label>Friction: <span id="frictionValue">0.995</span></label>
+                <input type="range" id="friction" min="980" max="1000" value="995">
+            </div>
+            <div class="control-group">
+                <label>Wobble Amount: <span id="wobbleValue">0.3</span></label>
+                <input type="range" id="wobble" min="0" max="100" value="30">
+            </div>
+            <div class="control-group">
+                <label>Precession Speed: <span id="precessionValue">0.5</span></label>
+                <input type="range" id="precession" min="0" max="100" value="50">
+            </div>
+
+            <h2>Top Design</h2>
+            <div class="control-group">
+                <label>Shape</label>
+                <select id="shape">
+                    <option value="classic">Classic</option>
+                    <option value="flat">Flat Disc</option>
+                    <option value="cone">Cone</option>
+                    <option value="tiered">Tiered</option>
+                    <option value="mushroom">Mushroom</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Pattern</label>
+                <select id="pattern">
+                    <option value="spiral">Spiral</option>
+                    <option value="segments">Segments</option>
+                    <option value="rings">Concentric Rings</option>
+                    <option value="dots">Dots</option>
+                    <option value="stripes">Radial Stripes</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Segments: <span id="segmentsValue">8</span></label>
+                <input type="range" id="segments" min="2" max="24" value="8">
+            </div>
+            <div class="control-group">
+                <label>Size: <span id="sizeValue">100</span></label>
+                <input type="range" id="size" min="50" max="150" value="100">
+            </div>
+
+            <h2>Colors</h2>
+            <div class="control-group">
+                <label>Primary Color</label>
+                <input type="color" id="color1" value="#ff6b6b">
+            </div>
+            <div class="control-group">
+                <label>Secondary Color</label>
+                <input type="color" id="color2" value="#48dbfb">
+            </div>
+            <div class="control-group">
+                <label>Accent Color</label>
+                <input type="color" id="color3" value="#feca57">
+            </div>
+
+            <h2>Presets</h2>
+            <div class="presets">
+                <button class="preset-btn" onclick="loadPreset('classic')">Classic</button>
+                <button class="preset-btn" onclick="loadPreset('hypnotic')">Hypnotic</button>
+                <button class="preset-btn" onclick="loadPreset('rainbow')">Rainbow</button>
+                <button class="preset-btn" onclick="loadPreset('minimal')">Minimal</button>
+            </div>
+
+            <h2>Controls</h2>
+            <button class="btn-spin" onclick="spin()">Spin!</button>
+            <button class="btn-stop" onclick="stop()">Stop</button>
+            <button class="btn-reset" onclick="reset()">Reset</button>
+
+            <div class="stats">
+                <div><span>Current RPM:</span><span id="currentRPM">0</span></div>
+                <div><span>Rotation:</span><span id="rotation">0°</span></div>
+                <div><span>Tilt Angle:</span><span id="tilt">0°</span></div>
+                <div><span>Time Spinning:</span><span id="spinTime">0s</span></div>
+            </div>
+
+            <div class="instructions">
+                <strong>Tips:</strong><br>
+                - Click "Spin!" to start the top<br>
+                - Adjust wobble to see precession effects<br>
+                - Try different shapes and patterns<br>
+                - High friction = longer spin time
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // State
+        let state = {
+            angle: 0,
+            rpm: 0,
+            targetRPM: 0,
+            wobbleAngle: 0,
+            precessionAngle: 0,
+            isSpinning: false,
+            spinStartTime: 0,
+            lastTime: 0
+        };
+
+        // Settings
+        let settings = {
+            speed: 50,
+            friction: 0.995,
+            wobble: 0.3,
+            precession: 0.5,
+            shape: 'classic',
+            pattern: 'spiral',
+            segments: 8,
+            size: 100,
+            color1: '#ff6b6b',
+            color2: '#48dbfb',
+            color3: '#feca57'
+        };
+
+        // Presets
+        const presets = {
+            classic: {
+                shape: 'classic', pattern: 'segments', segments: 6,
+                color1: '#e74c3c', color2: '#f1c40f', color3: '#3498db',
+                wobble: 30, precession: 50, friction: 995
+            },
+            hypnotic: {
+                shape: 'flat', pattern: 'spiral', segments: 12,
+                color1: '#9b59b6', color2: '#1abc9c', color3: '#e74c3c',
+                wobble: 10, precession: 80, friction: 998
+            },
+            rainbow: {
+                shape: 'tiered', pattern: 'segments', segments: 12,
+                color1: '#ff6b6b', color2: '#48dbfb', color3: '#feca57',
+                wobble: 40, precession: 60, friction: 993
+            },
+            minimal: {
+                shape: 'cone', pattern: 'rings', segments: 4,
+                color1: '#2c3e50', color2: '#ecf0f1', color3: '#95a5a6',
+                wobble: 20, precession: 30, friction: 997
+            }
+        };
+
+        function loadPreset(name) {
+            const p = presets[name];
+            document.getElementById('shape').value = p.shape;
+            document.getElementById('pattern').value = p.pattern;
+            document.getElementById('segments').value = p.segments;
+            document.getElementById('color1').value = p.color1;
+            document.getElementById('color2').value = p.color2;
+            document.getElementById('color3').value = p.color3;
+            document.getElementById('wobble').value = p.wobble;
+            document.getElementById('precession').value = p.precession;
+            document.getElementById('friction').value = p.friction;
+            updateSettings();
+        }
+
+        // Update settings from controls
+        function updateSettings() {
+            settings.speed = parseInt(document.getElementById('speed').value);
+            settings.friction = parseInt(document.getElementById('friction').value) / 1000;
+            settings.wobble = parseInt(document.getElementById('wobble').value) / 100;
+            settings.precession = parseInt(document.getElementById('precession').value) / 100;
+            settings.shape = document.getElementById('shape').value;
+            settings.pattern = document.getElementById('pattern').value;
+            settings.segments = parseInt(document.getElementById('segments').value);
+            settings.size = parseInt(document.getElementById('size').value);
+            settings.color1 = document.getElementById('color1').value;
+            settings.color2 = document.getElementById('color2').value;
+            settings.color3 = document.getElementById('color3').value;
+
+            // Update display values
+            document.getElementById('speedValue').textContent = settings.speed;
+            document.getElementById('frictionValue').textContent = settings.friction.toFixed(3);
+            document.getElementById('wobbleValue').textContent = settings.wobble.toFixed(2);
+            document.getElementById('precessionValue').textContent = settings.precession.toFixed(2);
+            document.getElementById('segmentsValue').textContent = settings.segments;
+            document.getElementById('sizeValue').textContent = settings.size;
+        }
+
+        // Attach event listeners to all controls
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', updateSettings);
+        });
+
+        function spin() {
+            state.targetRPM = settings.speed;
+            state.isSpinning = true;
+            if (state.spinStartTime === 0) {
+                state.spinStartTime = Date.now();
+            }
+        }
+
+        function stop() {
+            state.targetRPM = 0;
+        }
+
+        function reset() {
+            state.angle = 0;
+            state.rpm = 0;
+            state.targetRPM = 0;
+            state.wobbleAngle = 0;
+            state.precessionAngle = 0;
+            state.isSpinning = false;
+            state.spinStartTime = 0;
+        }
+
+        function drawTop(tiltX, tiltY) {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const radius = settings.size;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // Apply perspective tilt
+            ctx.transform(1, tiltY * 0.3, tiltX * 0.3, 1, 0, 0);
+
+            // Draw shadow
+            ctx.save();
+            ctx.scale(1, 0.3);
+            ctx.beginPath();
+            ctx.arc(tiltX * 30, 150 + Math.abs(tiltX * 20), radius * 0.8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fill();
+            ctx.restore();
+
+            // Draw the top based on shape
+            switch(settings.shape) {
+                case 'classic':
+                    drawClassicTop(radius);
+                    break;
+                case 'flat':
+                    drawFlatTop(radius);
+                    break;
+                case 'cone':
+                    drawConeTop(radius);
+                    break;
+                case 'tiered':
+                    drawTieredTop(radius);
+                    break;
+                case 'mushroom':
+                    drawMushroomTop(radius);
+                    break;
+            }
+
+            ctx.restore();
+        }
+
+        function drawClassicTop(radius) {
+            // Main disc
+            drawDisc(0, 0, radius, 0.4);
+
+            // Upper dome
+            ctx.save();
+            ctx.scale(1, 0.5);
+            ctx.beginPath();
+            ctx.arc(0, -radius * 0.4, radius * 0.6, Math.PI, 0);
+            const grad = ctx.createRadialGradient(0, -radius * 0.4, 0, 0, -radius * 0.4, radius * 0.6);
+            grad.addColorStop(0, settings.color3);
+            grad.addColorStop(1, settings.color1);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+
+            // Handle
+            ctx.beginPath();
+            ctx.moveTo(-8, -radius * 0.3);
+            ctx.lineTo(-5, -radius * 0.8);
+            ctx.lineTo(5, -radius * 0.8);
+            ctx.lineTo(8, -radius * 0.3);
+            ctx.fillStyle = '#8B4513';
+            ctx.fill();
+
+            // Tip
+            ctx.beginPath();
+            ctx.moveTo(-6, radius * 0.2);
+            ctx.lineTo(0, radius * 0.7);
+            ctx.lineTo(6, radius * 0.2);
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fill();
+        }
+
+        function drawFlatTop(radius) {
+            drawDisc(0, 0, radius, 0.15);
+
+            // Center bump
+            ctx.save();
+            ctx.scale(1, 0.3);
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = settings.color3;
+            ctx.fill();
+            ctx.restore();
+
+            // Tip
+            ctx.beginPath();
+            ctx.moveTo(-4, radius * 0.08);
+            ctx.lineTo(0, radius * 0.4);
+            ctx.lineTo(4, radius * 0.08);
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fill();
+        }
+
+        function drawConeTop(radius) {
+            // Cone body
+            ctx.beginPath();
+            ctx.moveTo(-radius, 0);
+            ctx.lineTo(0, radius * 0.8);
+            ctx.lineTo(radius, 0);
+            ctx.closePath();
+
+            const grad = ctx.createLinearGradient(-radius, 0, radius, 0);
+            grad.addColorStop(0, settings.color1);
+            grad.addColorStop(0.5, settings.color2);
+            grad.addColorStop(1, settings.color1);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Top disc
+            drawDisc(0, 0, radius, 0.2);
+        }
+
+        function drawTieredTop(radius) {
+            // Bottom tier
+            drawDisc(0, radius * 0.2, radius, 0.2);
+            // Middle tier
+            drawDisc(0, 0, radius * 0.7, 0.2);
+            // Top tier
+            drawDisc(0, -radius * 0.2, radius * 0.4, 0.2);
+
+            // Tip
+            ctx.beginPath();
+            ctx.moveTo(-4, radius * 0.3);
+            ctx.lineTo(0, radius * 0.6);
+            ctx.lineTo(4, radius * 0.3);
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fill();
+        }
+
+        function drawMushroomTop(radius) {
+            // Stem
+            ctx.beginPath();
+            ctx.moveTo(-radius * 0.2, 0);
+            ctx.lineTo(-radius * 0.15, radius * 0.5);
+            ctx.lineTo(radius * 0.15, radius * 0.5);
+            ctx.lineTo(radius * 0.2, 0);
+            ctx.fillStyle = '#DEB887';
+            ctx.fill();
+
+            // Cap
+            ctx.save();
+            ctx.scale(1, 0.4);
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, Math.PI, 0);
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+            grad.addColorStop(0, settings.color2);
+            grad.addColorStop(1, settings.color1);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+
+            // Top pattern
+            drawDiscPattern(0, 0, radius, 0.4);
+        }
+
+        function drawDisc(x, y, radius, thickness) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Draw ellipse (top view of disc)
+            ctx.save();
+            ctx.scale(1, thickness);
+
+            // Pattern on disc
+            drawDiscPattern(0, 0, radius, 1);
+
+            // Rim highlight
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function drawDiscPattern(x, y, radius, scaleY) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            switch(settings.pattern) {
+                case 'spiral':
+                    drawSpiral(radius);
+                    break;
+                case 'segments':
+                    drawSegments(radius);
+                    break;
+                case 'rings':
+                    drawRings(radius);
+                    break;
+                case 'dots':
+                    drawDots(radius);
+                    break;
+                case 'stripes':
+                    drawStripes(radius);
+                    break;
+            }
+
+            ctx.restore();
+        }
+
+        function drawSpiral(radius) {
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = settings.color1;
+            ctx.fill();
+
+            ctx.save();
+            ctx.rotate(state.angle);
+
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                const colors = [settings.color2, settings.color3, settings.color1];
+                for (let a = 0; a < Math.PI * 6; a += 0.1) {
+                    const r = (a / (Math.PI * 6)) * radius;
+                    const x = Math.cos(a + i * Math.PI * 2/3) * r;
+                    const y = Math.sin(a + i * Math.PI * 2/3) * r;
+                    if (a === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = radius * 0.15;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawSegments(radius) {
+            ctx.save();
+            ctx.rotate(state.angle);
+
+            const colors = [settings.color1, settings.color2, settings.color3];
+            for (let i = 0; i < settings.segments; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, (i / settings.segments) * Math.PI * 2,
+                       ((i + 1) / settings.segments) * Math.PI * 2);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawRings(radius) {
+            const colors = [settings.color1, settings.color2, settings.color3];
+            const ringCount = 5;
+
+            for (let i = ringCount; i > 0; i--) {
+                ctx.beginPath();
+                ctx.arc(0, 0, (i / ringCount) * radius, 0, Math.PI * 2);
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+            }
+        }
+
+        function drawDots(radius) {
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = settings.color1;
+            ctx.fill();
+
+            ctx.save();
+            ctx.rotate(state.angle);
+
+            const colors = [settings.color2, settings.color3];
+            for (let ring = 1; ring <= 3; ring++) {
+                const r = (ring / 4) * radius;
+                const dotCount = ring * 4;
+                for (let i = 0; i < dotCount; i++) {
+                    const angle = (i / dotCount) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, radius * 0.08, 0, Math.PI * 2);
+                    ctx.fillStyle = colors[(ring + i) % colors.length];
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawStripes(radius) {
+            ctx.save();
+            ctx.rotate(state.angle);
+
+            // Clip to circle
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.clip();
+
+            const colors = [settings.color1, settings.color2, settings.color3];
+            const stripeCount = settings.segments;
+
+            for (let i = 0; i < stripeCount; i++) {
+                const angle = (i / stripeCount) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(angle) * radius * 1.5, Math.sin(angle) * radius * 1.5);
+                ctx.lineTo(Math.cos(angle + Math.PI/stripeCount) * radius * 1.5,
+                          Math.sin(angle + Math.PI/stripeCount) * radius * 1.5);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function updateStats() {
+            document.getElementById('currentRPM').textContent = Math.round(state.rpm);
+            document.getElementById('rotation').textContent = Math.round((state.angle * 180 / Math.PI) % 360) + '°';
+            document.getElementById('tilt').textContent = (settings.wobble * Math.sin(state.wobbleAngle) * 10).toFixed(1) + '°';
+
+            if (state.isSpinning && state.rpm > 0.1) {
+                const elapsed = (Date.now() - state.spinStartTime) / 1000;
+                document.getElementById('spinTime').textContent = elapsed.toFixed(1) + 's';
+            }
+        }
+
+        function animate(timestamp) {
+            if (!state.lastTime) state.lastTime = timestamp;
+            const deltaTime = (timestamp - state.lastTime) / 1000;
+            state.lastTime = timestamp;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update physics
+            if (state.isSpinning) {
+                // Accelerate towards target RPM
+                state.rpm += (state.targetRPM - state.rpm) * 0.1;
+            }
+
+            // Apply friction
+            state.rpm *= settings.friction;
+
+            // Stop if very slow
+            if (state.rpm < 0.1 && state.targetRPM === 0) {
+                state.rpm = 0;
+                state.isSpinning = false;
+            }
+
+            // Update rotation
+            state.angle += (state.rpm / 60) * Math.PI * 2 * deltaTime;
+
+            // Update wobble/precession
+            if (state.rpm > 0) {
+                state.wobbleAngle += deltaTime * 3;
+                state.precessionAngle += deltaTime * settings.precession * 2;
+            }
+
+            // Calculate tilt based on wobble
+            const wobbleAmount = settings.wobble * Math.max(0, 1 - state.rpm / 100);
+            const tiltX = Math.sin(state.wobbleAngle) * wobbleAmount;
+            const tiltY = Math.cos(state.wobbleAngle + state.precessionAngle) * wobbleAmount;
+
+            // Draw
+            drawTop(tiltX, tiltY);
+            updateStats();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        updateSettings();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
