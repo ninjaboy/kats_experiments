@@ -1,74 +1,63 @@
-# Spinning Top Simulator
+# Spin Art - Drawing Top
 
-An interactive web-based spinning top simulator for experimenting with different top designs, patterns, and physics parameters.
+A top-down spinning canvas where you can draw while it spins, creating mesmerizing spin art patterns.
 
 ## How to Run
 
-Simply open `index.html` in any modern web browser:
+Open `index.html` in any modern web browser:
 
 ```bash
-# From the repository root
 open experiments/spinning-top/index.html
+```
 
-# Or use a local server
+Or via local server:
+```bash
 python -m http.server 8000
-# Then visit http://localhost:8000/experiments/spinning-top/
+# Visit http://localhost:8000/experiments/spinning-top/
 ```
 
 ## Features
 
-### Physics Controls
-- **Spin Speed**: Set the target RPM (0-200)
-- **Friction**: Controls how quickly the top slows down (higher = longer spin)
-- **Wobble Amount**: How much the top wobbles as it slows
-- **Precession Speed**: Speed of the wobble rotation (gyroscopic precession)
+### Drawing Tools
+- **Pencil** - Freehand drawing
+- **Line** - Straight lines (click and drag)
+- **Fill** - Flood fill areas with color
+- **Eraser** - Erase to background color
+- **Circle** - Draw circles (click center, drag radius)
+- **Rectangle** - Draw rectangles
 
-### Top Designs
-Five different shapes:
-- **Classic**: Traditional wooden top with dome and handle
-- **Flat Disc**: Low-profile disc top
-- **Cone**: Conical top design
-- **Tiered**: Multi-layer stacked disc design
-- **Mushroom**: Mushroom-shaped top
+### Controls
+- **Speed** (-200 to 200 RPM) - Real-time, supports reverse spin
+- **Brush Size** (1-50px)
+- **Opacity** (10-100%)
+- **Color Palette** - 24 preset colors + custom picker
+- **Background Color** - Changeable anytime
 
-### Patterns
-Five pattern options:
-- **Spiral**: Three-armed spiral pattern
-- **Segments**: Pie-slice segments
-- **Concentric Rings**: Bullseye pattern
-- **Dots**: Dotted rings
-- **Radial Stripes**: Alternating stripes from center
+### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| P | Pencil tool |
+| L | Line tool |
+| F | Fill tool |
+| E | Eraser |
+| C | Circle tool |
+| R | Rectangle tool |
+| [ | Decrease brush size |
+| ] | Increase brush size |
+| Space | Pause/Resume spin |
 
-### Color Customization
-- Primary, secondary, and accent colors
-- Full color picker support
+## How It Works
 
-### Presets
-- **Classic**: Traditional toy top look
-- **Hypnotic**: Mesmerizing spiral pattern
-- **Rainbow**: Colorful multi-segment design
-- **Minimal**: Clean, simple aesthetic
+The app uses two canvases:
+1. A hidden drawing canvas where your strokes are recorded
+2. A display canvas that shows the drawing canvas rotated
+
+Mouse coordinates are transformed to account for the current rotation angle, so your brush follows your cursor naturally even while the canvas spins.
 
 ## Experiment Ideas
 
-1. **Optimal friction**: What friction value gives the longest spin time?
-2. **Visual illusions**: Which patterns create interesting optical effects when spinning?
-3. **Shape comparison**: Compare spin stability between different shapes
-4. **Color blending**: Observe how colors blend at different speeds
-5. **Wobble physics**: Study precession behavior at different speeds
-
-## Technical Notes
-
-- Built with HTML5 Canvas and vanilla JavaScript
-- No external dependencies
-- Uses `requestAnimationFrame` for smooth 60fps animation
-- Physics simulation includes basic friction and precession models
-
-## Future Improvements
-
-Potential enhancements to explore:
-- 3D rendering with WebGL
-- Sound effects
-- Multiple tops spinning simultaneously
-- Export/import custom designs
-- More realistic physics (moment of inertia, angular momentum)
+- Draw a single line from center outward while spinning slowly
+- Create symmetrical patterns by drawing at consistent distances from center
+- Use fill tool to create color wheel effects
+- Try negative RPM for reverse spin effects
+- Draw concentric circles and watch them spin

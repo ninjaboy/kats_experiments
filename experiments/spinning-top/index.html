@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spinning Top Simulator</title>
+    <title>Spin Art - Drawing Top</title>
     <style>
         * {
             margin: 0;
@@ -13,778 +13,688 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: #1a1a2e;
             min-height: 100vh;
             color: #fff;
-        }
-
-        .container {
             display: flex;
-            flex-wrap: wrap;
-            padding: 20px;
-            gap: 20px;
+            overflow: hidden;
         }
 
-        .canvas-container {
-            flex: 1;
-            min-width: 400px;
+        .toolbar {
+            width: 60px;
+            background: #252542;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            padding: 10px 5px;
+            gap: 5px;
+            border-right: 1px solid #333;
         }
 
-        canvas {
-            background: radial-gradient(ellipse at center, #2a2a4a 0%, #1a1a2e 100%);
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        .tool-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: #444;
+        }
+
+        .tool-btn.active {
+            background: #4a6fa5;
+            box-shadow: 0 0 10px rgba(74, 111, 165, 0.5);
+        }
+
+        .separator {
+            height: 1px;
+            background: #444;
+            margin: 5px 0;
+        }
+
+        .color-btn {
+            width: 48px;
+            height: 32px;
+            border: 2px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-btn.active {
+            border-color: #fff;
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #252542 0%, #1a1a2e 100%);
+        }
+
+        #displayCanvas {
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5), 0 0 100px rgba(74, 111, 165, 0.2);
+            cursor: crosshair;
         }
 
         .controls {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 20px;
-            width: 320px;
-            max-height: 90vh;
+            width: 280px;
+            background: #252542;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-left: 1px solid #333;
             overflow-y: auto;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         h2 {
-            font-size: 1em;
-            margin: 15px 0 10px;
-            color: #48dbfb;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
+            font-size: 0.9em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
         }
 
         .control-group {
-            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-row label {
             font-size: 0.85em;
             color: #aaa;
+            min-width: 70px;
         }
 
-        input[type="range"] {
-            width: 100%;
+        .slider-row input[type="range"] {
+            flex: 1;
             height: 6px;
             border-radius: 3px;
-            background: rgba(255,255,255,0.2);
+            background: #444;
             outline: none;
             -webkit-appearance: none;
         }
 
-        input[type="range"]::-webkit-slider-thumb {
+        .slider-row input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #48dbfb;
+            background: #4a6fa5;
             cursor: pointer;
+        }
+
+        .slider-row span {
+            font-size: 0.85em;
+            color: #4a6fa5;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .palette-color {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .palette-color:hover {
+            border-color: #666;
+        }
+
+        .palette-color.selected {
+            border-color: #fff;
         }
 
         input[type="color"] {
             width: 100%;
             height: 35px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            background: transparent;
         }
 
-        select {
-            width: 100%;
-            padding: 8px;
-            border-radius: 5px;
+        .btn {
+            padding: 10px 15px;
             border: none;
-            background: rgba(255,255,255,0.2);
-            color: #fff;
+            border-radius: 6px;
             font-size: 0.9em;
-        }
-
-        select option {
-            background: #1a1a2e;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: transform 0.1s;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        .btn:hover {
+            transform: translateY(-1px);
         }
 
-        .btn-spin {
-            background: linear-gradient(90deg, #ff6b6b, #feca57);
-            color: #1a1a2e;
-            font-weight: bold;
-        }
-
-        .btn-stop {
-            background: linear-gradient(90deg, #576574, #8395a7);
+        .btn-clear {
+            background: #c0392b;
             color: #fff;
         }
 
-        .btn-reset {
-            background: linear-gradient(90deg, #48dbfb, #0abde3);
-            color: #1a1a2e;
+        .btn-fill-bg {
+            background: #2980b9;
+            color: #fff;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
         }
 
         .stats {
-            background: rgba(0,0,0,0.3);
-            border-radius: 5px;
-            padding: 10px;
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 0.85em;
-        }
-
-        .stats div {
+            font-size: 0.8em;
+            color: #666;
             display: flex;
             justify-content: space-between;
-            margin: 3px 0;
         }
 
-        .stats span:last-child {
-            color: #48dbfb;
-        }
-
-        .presets {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .preset-btn {
-            padding: 8px;
-            font-size: 0.8em;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            margin-top: 0;
-        }
-
-        .preset-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .instructions {
+        .keyboard-hint {
             font-size: 0.75em;
-            color: #888;
-            margin-top: 15px;
-            line-height: 1.5;
+            color: #555;
+            line-height: 1.6;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .keyboard-hint kbd {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="canvas-container">
-            <canvas id="canvas" width="600" height="600"></canvas>
+    <div class="toolbar">
+        <button class="tool-btn active" data-tool="pencil" title="Pencil (P)">✏️</button>
+        <button class="tool-btn" data-tool="line" title="Line (L)">📏</button>
+        <button class="tool-btn" data-tool="fill" title="Fill (F)">🪣</button>
+        <button class="tool-btn" data-tool="eraser" title="Eraser (E)">🧽</button>
+        <div class="separator"></div>
+        <button class="tool-btn" data-tool="circle" title="Circle (C)">⭕</button>
+        <button class="tool-btn" data-tool="rect" title="Rectangle (R)">⬜</button>
+    </div>
+
+    <div class="canvas-area">
+        <canvas id="displayCanvas" width="600" height="600"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <h2>Speed</h2>
+            <div class="slider-row">
+                <label>RPM</label>
+                <input type="range" id="speed" min="-200" max="200" value="30">
+                <span id="speedValue">30</span>
+            </div>
         </div>
 
-        <div class="controls">
-            <h1>Spinning Top Lab</h1>
+        <div class="control-group">
+            <h2>Brush</h2>
+            <div class="slider-row">
+                <label>Size</label>
+                <input type="range" id="brushSize" min="1" max="50" value="8">
+                <span id="brushSizeValue">8px</span>
+            </div>
+            <div class="slider-row">
+                <label>Opacity</label>
+                <input type="range" id="opacity" min="10" max="100" value="100">
+                <span id="opacityValue">100%</span>
+            </div>
+        </div>
 
-            <h2>Physics</h2>
-            <div class="control-group">
-                <label>Spin Speed: <span id="speedValue">50</span> RPM</label>
-                <input type="range" id="speed" min="0" max="200" value="50">
-            </div>
-            <div class="control-group">
-                <label>Friction: <span id="frictionValue">0.995</span></label>
-                <input type="range" id="friction" min="980" max="1000" value="995">
-            </div>
-            <div class="control-group">
-                <label>Wobble Amount: <span id="wobbleValue">0.3</span></label>
-                <input type="range" id="wobble" min="0" max="100" value="30">
-            </div>
-            <div class="control-group">
-                <label>Precession Speed: <span id="precessionValue">0.5</span></label>
-                <input type="range" id="precession" min="0" max="100" value="50">
-            </div>
+        <div class="control-group">
+            <h2>Color</h2>
+            <div class="color-palette" id="palette"></div>
+            <input type="color" id="colorPicker" value="#ffffff">
+        </div>
 
-            <h2>Top Design</h2>
-            <div class="control-group">
-                <label>Shape</label>
-                <select id="shape">
-                    <option value="classic">Classic</option>
-                    <option value="flat">Flat Disc</option>
-                    <option value="cone">Cone</option>
-                    <option value="tiered">Tiered</option>
-                    <option value="mushroom">Mushroom</option>
-                </select>
+        <div class="control-group">
+            <h2>Canvas</h2>
+            <div class="slider-row">
+                <label>Background</label>
+                <input type="color" id="bgColor" value="#1a1a2e">
             </div>
-            <div class="control-group">
-                <label>Pattern</label>
-                <select id="pattern">
-                    <option value="spiral">Spiral</option>
-                    <option value="segments">Segments</option>
-                    <option value="rings">Concentric Rings</option>
-                    <option value="dots">Dots</option>
-                    <option value="stripes">Radial Stripes</option>
-                </select>
+            <div class="btn-row">
+                <button class="btn btn-fill-bg" onclick="fillBackground()">Fill BG</button>
+                <button class="btn btn-clear" onclick="clearCanvas()">Clear</button>
             </div>
-            <div class="control-group">
-                <label>Segments: <span id="segmentsValue">8</span></label>
-                <input type="range" id="segments" min="2" max="24" value="8">
-            </div>
-            <div class="control-group">
-                <label>Size: <span id="sizeValue">100</span></label>
-                <input type="range" id="size" min="50" max="150" value="100">
-            </div>
+        </div>
 
-            <h2>Colors</h2>
-            <div class="control-group">
-                <label>Primary Color</label>
-                <input type="color" id="color1" value="#ff6b6b">
-            </div>
-            <div class="control-group">
-                <label>Secondary Color</label>
-                <input type="color" id="color2" value="#48dbfb">
-            </div>
-            <div class="control-group">
-                <label>Accent Color</label>
-                <input type="color" id="color3" value="#feca57">
-            </div>
+        <div class="stats">
+            <span>Rotation: <span id="rotation">0°</span></span>
+            <span id="fps">60 FPS</span>
+        </div>
 
-            <h2>Presets</h2>
-            <div class="presets">
-                <button class="preset-btn" onclick="loadPreset('classic')">Classic</button>
-                <button class="preset-btn" onclick="loadPreset('hypnotic')">Hypnotic</button>
-                <button class="preset-btn" onclick="loadPreset('rainbow')">Rainbow</button>
-                <button class="preset-btn" onclick="loadPreset('minimal')">Minimal</button>
-            </div>
-
-            <h2>Controls</h2>
-            <button class="btn-spin" onclick="spin()">Spin!</button>
-            <button class="btn-stop" onclick="stop()">Stop</button>
-            <button class="btn-reset" onclick="reset()">Reset</button>
-
-            <div class="stats">
-                <div><span>Current RPM:</span><span id="currentRPM">0</span></div>
-                <div><span>Rotation:</span><span id="rotation">0°</span></div>
-                <div><span>Tilt Angle:</span><span id="tilt">0°</span></div>
-                <div><span>Time Spinning:</span><span id="spinTime">0s</span></div>
-            </div>
-
-            <div class="instructions">
-                <strong>Tips:</strong><br>
-                - Click "Spin!" to start the top<br>
-                - Adjust wobble to see precession effects<br>
-                - Try different shapes and patterns<br>
-                - High friction = longer spin time
-            </div>
+        <div class="keyboard-hint">
+            <kbd>P</kbd> Pencil
+            <kbd>L</kbd> Line
+            <kbd>F</kbd> Fill
+            <kbd>E</kbd> Eraser<br>
+            <kbd>C</kbd> Circle
+            <kbd>R</kbd> Rectangle<br>
+            <kbd>[</kbd> <kbd>]</kbd> Brush size
+            <kbd>Space</kbd> Pause
         </div>
     </div>
 
+    <!-- Hidden canvas for drawing -->
+    <canvas id="drawCanvas" width="600" height="600" style="display:none;"></canvas>
+
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const displayCanvas = document.getElementById('displayCanvas');
+        const displayCtx = displayCanvas.getContext('2d');
+        const drawCanvas = document.getElementById('drawCanvas');
+        const drawCtx = drawCanvas.getContext('2d');
 
         // State
-        let state = {
-            angle: 0,
-            rpm: 0,
-            targetRPM: 0,
-            wobbleAngle: 0,
-            precessionAngle: 0,
-            isSpinning: false,
-            spinStartTime: 0,
-            lastTime: 0
-        };
+        let angle = 0;
+        let rpm = 30;
+        let lastTime = 0;
+        let frameCount = 0;
+        let lastFpsTime = 0;
 
-        // Settings
-        let settings = {
-            speed: 50,
-            friction: 0.995,
-            wobble: 0.3,
-            precession: 0.5,
-            shape: 'classic',
-            pattern: 'spiral',
-            segments: 8,
-            size: 100,
-            color1: '#ff6b6b',
-            color2: '#48dbfb',
-            color3: '#feca57'
-        };
+        // Drawing state
+        let currentTool = 'pencil';
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let startX = 0;
+        let startY = 0;
+        let currentColor = '#ffffff';
+        let brushSize = 8;
+        let opacity = 1;
 
-        // Presets
-        const presets = {
-            classic: {
-                shape: 'classic', pattern: 'segments', segments: 6,
-                color1: '#e74c3c', color2: '#f1c40f', color3: '#3498db',
-                wobble: 30, precession: 50, friction: 995
-            },
-            hypnotic: {
-                shape: 'flat', pattern: 'spiral', segments: 12,
-                color1: '#9b59b6', color2: '#1abc9c', color3: '#e74c3c',
-                wobble: 10, precession: 80, friction: 998
-            },
-            rainbow: {
-                shape: 'tiered', pattern: 'segments', segments: 12,
-                color1: '#ff6b6b', color2: '#48dbfb', color3: '#feca57',
-                wobble: 40, precession: 60, friction: 993
-            },
-            minimal: {
-                shape: 'cone', pattern: 'rings', segments: 4,
-                color1: '#2c3e50', color2: '#ecf0f1', color3: '#95a5a6',
-                wobble: 20, precession: 30, friction: 997
-            }
-        };
+        // For shape preview
+        let previewCanvas = document.createElement('canvas');
+        previewCanvas.width = 600;
+        previewCanvas.height = 600;
+        let previewCtx = previewCanvas.getContext('2d');
 
-        function loadPreset(name) {
-            const p = presets[name];
-            document.getElementById('shape').value = p.shape;
-            document.getElementById('pattern').value = p.pattern;
-            document.getElementById('segments').value = p.segments;
-            document.getElementById('color1').value = p.color1;
-            document.getElementById('color2').value = p.color2;
-            document.getElementById('color3').value = p.color3;
-            document.getElementById('wobble').value = p.wobble;
-            document.getElementById('precession').value = p.precession;
-            document.getElementById('friction').value = p.friction;
-            updateSettings();
-        }
+        // Color palette
+        const colors = [
+            '#ffffff', '#c0c0c0', '#808080', '#000000', '#ff0000', '#800000',
+            '#ffff00', '#808000', '#00ff00', '#008000', '#00ffff', '#008080',
+            '#0000ff', '#000080', '#ff00ff', '#800080', '#ff6b6b', '#feca57',
+            '#48dbfb', '#1dd1a1', '#5f27cd', '#ff9f43', '#ee5a24', '#009432'
+        ];
 
-        // Update settings from controls
-        function updateSettings() {
-            settings.speed = parseInt(document.getElementById('speed').value);
-            settings.friction = parseInt(document.getElementById('friction').value) / 1000;
-            settings.wobble = parseInt(document.getElementById('wobble').value) / 100;
-            settings.precession = parseInt(document.getElementById('precession').value) / 100;
-            settings.shape = document.getElementById('shape').value;
-            settings.pattern = document.getElementById('pattern').value;
-            settings.segments = parseInt(document.getElementById('segments').value);
-            settings.size = parseInt(document.getElementById('size').value);
-            settings.color1 = document.getElementById('color1').value;
-            settings.color2 = document.getElementById('color2').value;
-            settings.color3 = document.getElementById('color3').value;
-
-            // Update display values
-            document.getElementById('speedValue').textContent = settings.speed;
-            document.getElementById('frictionValue').textContent = settings.friction.toFixed(3);
-            document.getElementById('wobbleValue').textContent = settings.wobble.toFixed(2);
-            document.getElementById('precessionValue').textContent = settings.precession.toFixed(2);
-            document.getElementById('segmentsValue').textContent = settings.segments;
-            document.getElementById('sizeValue').textContent = settings.size;
-        }
-
-        // Attach event listeners to all controls
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', updateSettings);
+        // Initialize palette
+        const paletteEl = document.getElementById('palette');
+        colors.forEach((color, i) => {
+            const div = document.createElement('div');
+            div.className = 'palette-color' + (i === 0 ? ' selected' : '');
+            div.style.background = color;
+            div.onclick = () => selectColor(color, div);
+            paletteEl.appendChild(div);
         });
 
-        function spin() {
-            state.targetRPM = settings.speed;
-            state.isSpinning = true;
-            if (state.spinStartTime === 0) {
-                state.spinStartTime = Date.now();
+        function selectColor(color, el) {
+            currentColor = color;
+            document.getElementById('colorPicker').value = color;
+            document.querySelectorAll('.palette-color').forEach(p => p.classList.remove('selected'));
+            if (el) el.classList.add('selected');
+        }
+
+        document.getElementById('colorPicker').addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            document.querySelectorAll('.palette-color').forEach(p => p.classList.remove('selected'));
+        });
+
+        // Tool selection
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+            });
+        });
+
+        // Slider updates - REAL-TIME
+        document.getElementById('speed').addEventListener('input', (e) => {
+            rpm = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = rpm;
+        });
+
+        document.getElementById('brushSize').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            document.getElementById('brushSizeValue').textContent = brushSize + 'px';
+        });
+
+        document.getElementById('opacity').addEventListener('input', (e) => {
+            opacity = parseInt(e.target.value) / 100;
+            document.getElementById('opacityValue').textContent = e.target.value + '%';
+        });
+
+        // Transform mouse coordinates to drawing canvas coordinates (accounting for rotation)
+        function getDrawCoords(e) {
+            const rect = displayCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Center of canvas
+            const cx = displayCanvas.width / 2;
+            const cy = displayCanvas.height / 2;
+
+            // Translate to center, rotate back, translate back
+            const dx = x - cx;
+            const dy = y - cy;
+            const cos = Math.cos(-angle);
+            const sin = Math.sin(-angle);
+
+            return {
+                x: cx + dx * cos - dy * sin,
+                y: cy + dx * sin + dy * cos
+            };
+        }
+
+        // Drawing functions
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getDrawCoords(e);
+            lastX = coords.x;
+            lastY = coords.y;
+            startX = coords.x;
+            startY = coords.y;
+
+            if (currentTool === 'fill') {
+                floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
+                isDrawing = false;
+            } else if (currentTool === 'pencil' || currentTool === 'eraser') {
+                drawDot(coords.x, coords.y);
             }
         }
 
-        function stop() {
-            state.targetRPM = 0;
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const coords = getDrawCoords(e);
+
+            if (currentTool === 'pencil' || currentTool === 'eraser') {
+                drawLine(lastX, lastY, coords.x, coords.y);
+                lastX = coords.x;
+                lastY = coords.y;
+            } else if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect') {
+                // Preview on separate canvas
+                previewCtx.clearRect(0, 0, 600, 600);
+                previewCtx.drawImage(drawCanvas, 0, 0);
+                drawShape(previewCtx, startX, startY, coords.x, coords.y);
+            }
         }
 
-        function reset() {
-            state.angle = 0;
-            state.rpm = 0;
-            state.targetRPM = 0;
-            state.wobbleAngle = 0;
-            state.precessionAngle = 0;
-            state.isSpinning = false;
-            state.spinStartTime = 0;
-        }
+        function stopDrawing(e) {
+            if (!isDrawing) return;
 
-        function drawTop(tiltX, tiltY) {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const radius = settings.size;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-
-            // Apply perspective tilt
-            ctx.transform(1, tiltY * 0.3, tiltX * 0.3, 1, 0, 0);
-
-            // Draw shadow
-            ctx.save();
-            ctx.scale(1, 0.3);
-            ctx.beginPath();
-            ctx.arc(tiltX * 30, 150 + Math.abs(tiltX * 20), radius * 0.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.fill();
-            ctx.restore();
-
-            // Draw the top based on shape
-            switch(settings.shape) {
-                case 'classic':
-                    drawClassicTop(radius);
-                    break;
-                case 'flat':
-                    drawFlatTop(radius);
-                    break;
-                case 'cone':
-                    drawConeTop(radius);
-                    break;
-                case 'tiered':
-                    drawTieredTop(radius);
-                    break;
-                case 'mushroom':
-                    drawMushroomTop(radius);
-                    break;
+            if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect') {
+                const coords = getDrawCoords(e);
+                drawShape(drawCtx, startX, startY, coords.x, coords.y);
+                previewCtx.clearRect(0, 0, 600, 600);
             }
 
-            ctx.restore();
+            isDrawing = false;
         }
 
-        function drawClassicTop(radius) {
-            // Main disc
-            drawDisc(0, 0, radius, 0.4);
-
-            // Upper dome
-            ctx.save();
-            ctx.scale(1, 0.5);
-            ctx.beginPath();
-            ctx.arc(0, -radius * 0.4, radius * 0.6, Math.PI, 0);
-            const grad = ctx.createRadialGradient(0, -radius * 0.4, 0, 0, -radius * 0.4, radius * 0.6);
-            grad.addColorStop(0, settings.color3);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.restore();
-
-            // Handle
-            ctx.beginPath();
-            ctx.moveTo(-8, -radius * 0.3);
-            ctx.lineTo(-5, -radius * 0.8);
-            ctx.lineTo(5, -radius * 0.8);
-            ctx.lineTo(8, -radius * 0.3);
-            ctx.fillStyle = '#8B4513';
-            ctx.fill();
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-6, radius * 0.2);
-            ctx.lineTo(0, radius * 0.7);
-            ctx.lineTo(6, radius * 0.2);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
+        function drawDot(x, y) {
+            drawCtx.globalAlpha = opacity;
+            drawCtx.fillStyle = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+            drawCtx.beginPath();
+            drawCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+            drawCtx.fill();
+            drawCtx.globalAlpha = 1;
         }
 
-        function drawFlatTop(radius) {
-            drawDisc(0, 0, radius, 0.15);
-
-            // Center bump
-            ctx.save();
-            ctx.scale(1, 0.3);
-            ctx.beginPath();
-            ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color3;
-            ctx.fill();
-            ctx.restore();
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-4, radius * 0.08);
-            ctx.lineTo(0, radius * 0.4);
-            ctx.lineTo(4, radius * 0.08);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
+        function drawLine(x1, y1, x2, y2) {
+            drawCtx.globalAlpha = opacity;
+            drawCtx.strokeStyle = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+            drawCtx.lineWidth = brushSize;
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+            drawCtx.beginPath();
+            drawCtx.moveTo(x1, y1);
+            drawCtx.lineTo(x2, y2);
+            drawCtx.stroke();
+            drawCtx.globalAlpha = 1;
         }
 
-        function drawConeTop(radius) {
-            // Cone body
-            ctx.beginPath();
-            ctx.moveTo(-radius, 0);
-            ctx.lineTo(0, radius * 0.8);
-            ctx.lineTo(radius, 0);
-            ctx.closePath();
+        function drawShape(ctx, x1, y1, x2, y2) {
+            ctx.globalAlpha = opacity;
+            ctx.strokeStyle = currentColor;
+            ctx.fillStyle = currentColor;
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
 
-            const grad = ctx.createLinearGradient(-radius, 0, radius, 0);
-            grad.addColorStop(0, settings.color1);
-            grad.addColorStop(0.5, settings.color2);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Top disc
-            drawDisc(0, 0, radius, 0.2);
-        }
-
-        function drawTieredTop(radius) {
-            // Bottom tier
-            drawDisc(0, radius * 0.2, radius, 0.2);
-            // Middle tier
-            drawDisc(0, 0, radius * 0.7, 0.2);
-            // Top tier
-            drawDisc(0, -radius * 0.2, radius * 0.4, 0.2);
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-4, radius * 0.3);
-            ctx.lineTo(0, radius * 0.6);
-            ctx.lineTo(4, radius * 0.3);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
-        }
-
-        function drawMushroomTop(radius) {
-            // Stem
-            ctx.beginPath();
-            ctx.moveTo(-radius * 0.2, 0);
-            ctx.lineTo(-radius * 0.15, radius * 0.5);
-            ctx.lineTo(radius * 0.15, radius * 0.5);
-            ctx.lineTo(radius * 0.2, 0);
-            ctx.fillStyle = '#DEB887';
-            ctx.fill();
-
-            // Cap
-            ctx.save();
-            ctx.scale(1, 0.4);
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, Math.PI, 0);
-            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            grad.addColorStop(0, settings.color2);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.restore();
-
-            // Top pattern
-            drawDiscPattern(0, 0, radius, 0.4);
-        }
-
-        function drawDisc(x, y, radius, thickness) {
-            ctx.save();
-            ctx.translate(x, y);
-
-            // Draw ellipse (top view of disc)
-            ctx.save();
-            ctx.scale(1, thickness);
-
-            // Pattern on disc
-            drawDiscPattern(0, 0, radius, 1);
-
-            // Rim highlight
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.restore();
-            ctx.restore();
-        }
-
-        function drawDiscPattern(x, y, radius, scaleY) {
-            ctx.save();
-            ctx.translate(x, y);
-
-            switch(settings.pattern) {
-                case 'spiral':
-                    drawSpiral(radius);
-                    break;
-                case 'segments':
-                    drawSegments(radius);
-                    break;
-                case 'rings':
-                    drawRings(radius);
-                    break;
-                case 'dots':
-                    drawDots(radius);
-                    break;
-                case 'stripes':
-                    drawStripes(radius);
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        function drawSpiral(radius) {
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color1;
-            ctx.fill();
-
-            ctx.save();
-            ctx.rotate(state.angle);
-
-            for (let i = 0; i < 3; i++) {
+            if (currentTool === 'line') {
                 ctx.beginPath();
-                const colors = [settings.color2, settings.color3, settings.color1];
-                for (let a = 0; a < Math.PI * 6; a += 0.1) {
-                    const r = (a / (Math.PI * 6)) * radius;
-                    const x = Math.cos(a + i * Math.PI * 2/3) * r;
-                    const y = Math.sin(a + i * Math.PI * 2/3) * r;
-                    if (a === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = colors[i];
-                ctx.lineWidth = radius * 0.15;
-                ctx.lineCap = 'round';
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
                 ctx.stroke();
-            }
-            ctx.restore();
-        }
-
-        function drawSegments(radius) {
-            ctx.save();
-            ctx.rotate(state.angle);
-
-            const colors = [settings.color1, settings.color2, settings.color3];
-            for (let i = 0; i < settings.segments; i++) {
+            } else if (currentTool === 'circle') {
+                const radius = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
                 ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.arc(0, 0, radius, (i / settings.segments) * Math.PI * 2,
-                       ((i + 1) / settings.segments) * Math.PI * 2);
-                ctx.closePath();
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
+                ctx.arc(x1, y1, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (currentTool === 'rect') {
+                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
             }
-            ctx.restore();
+
+            ctx.globalAlpha = 1;
         }
 
-        function drawRings(radius) {
-            const colors = [settings.color1, settings.color2, settings.color3];
-            const ringCount = 5;
+        // Flood fill algorithm
+        function floodFill(startX, startY, fillColor) {
+            const imageData = drawCtx.getImageData(0, 0, 600, 600);
+            const data = imageData.data;
 
-            for (let i = ringCount; i > 0; i--) {
-                ctx.beginPath();
-                ctx.arc(0, 0, (i / ringCount) * radius, 0, Math.PI * 2);
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
-            }
-        }
+            const startIdx = (startY * 600 + startX) * 4;
+            const startR = data[startIdx];
+            const startG = data[startIdx + 1];
+            const startB = data[startIdx + 2];
+            const startA = data[startIdx + 3];
 
-        function drawDots(radius) {
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color1;
-            ctx.fill();
+            // Parse fill color
+            const fill = hexToRgb(fillColor);
+            if (!fill) return;
 
-            ctx.save();
-            ctx.rotate(state.angle);
+            // Don't fill if same color
+            if (startR === fill.r && startG === fill.g && startB === fill.b) return;
 
-            const colors = [settings.color2, settings.color3];
-            for (let ring = 1; ring <= 3; ring++) {
-                const r = (ring / 4) * radius;
-                const dotCount = ring * 4;
-                for (let i = 0; i < dotCount; i++) {
-                    const angle = (i / dotCount) * Math.PI * 2;
-                    ctx.beginPath();
-                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, radius * 0.08, 0, Math.PI * 2);
-                    ctx.fillStyle = colors[(ring + i) % colors.length];
-                    ctx.fill();
+            const stack = [[startX, startY]];
+            const visited = new Set();
+
+            while (stack.length > 0) {
+                const [x, y] = stack.pop();
+                const key = `${x},${y}`;
+
+                if (visited.has(key)) continue;
+                if (x < 0 || x >= 600 || y < 0 || y >= 600) continue;
+
+                const idx = (y * 600 + x) * 4;
+
+                // Check if this pixel matches start color (with tolerance)
+                if (Math.abs(data[idx] - startR) > 10 ||
+                    Math.abs(data[idx + 1] - startG) > 10 ||
+                    Math.abs(data[idx + 2] - startB) > 10) {
+                    continue;
                 }
+
+                visited.add(key);
+
+                // Fill this pixel
+                data[idx] = fill.r;
+                data[idx + 1] = fill.g;
+                data[idx + 2] = fill.b;
+                data[idx + 3] = 255;
+
+                // Add neighbors
+                stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
             }
-            ctx.restore();
+
+            drawCtx.putImageData(imageData, 0, 0);
         }
 
-        function drawStripes(radius) {
-            ctx.save();
-            ctx.rotate(state.angle);
-
-            // Clip to circle
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.clip();
-
-            const colors = [settings.color1, settings.color2, settings.color3];
-            const stripeCount = settings.segments;
-
-            for (let i = 0; i < stripeCount; i++) {
-                const angle = (i / stripeCount) * Math.PI * 2;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(angle) * radius * 1.5, Math.sin(angle) * radius * 1.5);
-                ctx.lineTo(Math.cos(angle + Math.PI/stripeCount) * radius * 1.5,
-                          Math.sin(angle + Math.PI/stripeCount) * radius * 1.5);
-                ctx.closePath();
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
-            }
-            ctx.restore();
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
         }
 
-        function updateStats() {
-            document.getElementById('currentRPM').textContent = Math.round(state.rpm);
-            document.getElementById('rotation').textContent = Math.round((state.angle * 180 / Math.PI) % 360) + '°';
-            document.getElementById('tilt').textContent = (settings.wobble * Math.sin(state.wobbleAngle) * 10).toFixed(1) + '°';
+        // Canvas event listeners
+        displayCanvas.addEventListener('mousedown', startDrawing);
+        displayCanvas.addEventListener('mousemove', draw);
+        displayCanvas.addEventListener('mouseup', stopDrawing);
+        displayCanvas.addEventListener('mouseleave', stopDrawing);
 
-            if (state.isSpinning && state.rpm > 0.1) {
-                const elapsed = (Date.now() - state.spinStartTime) / 1000;
-                document.getElementById('spinTime').textContent = elapsed.toFixed(1) + 's';
+        // Touch support
+        displayCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+        });
+        displayCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            draw({ clientX: touch.clientX, clientY: touch.clientY });
+        });
+        displayCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopDrawing(e);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+
+            switch(e.key.toLowerCase()) {
+                case 'p': selectTool('pencil'); break;
+                case 'l': selectTool('line'); break;
+                case 'f': selectTool('fill'); break;
+                case 'e': selectTool('eraser'); break;
+                case 'c': selectTool('circle'); break;
+                case 'r': selectTool('rect'); break;
+                case '[':
+                    brushSize = Math.max(1, brushSize - 2);
+                    document.getElementById('brushSize').value = brushSize;
+                    document.getElementById('brushSizeValue').textContent = brushSize + 'px';
+                    break;
+                case ']':
+                    brushSize = Math.min(50, brushSize + 2);
+                    document.getElementById('brushSize').value = brushSize;
+                    document.getElementById('brushSizeValue').textContent = brushSize + 'px';
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    rpm = rpm === 0 ? 30 : 0;
+                    document.getElementById('speed').value = rpm;
+                    document.getElementById('speedValue').textContent = rpm;
+                    break;
             }
+        });
+
+        function selectTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.tool === tool);
+            });
         }
 
+        // Canvas functions
+        function clearCanvas() {
+            const bg = document.getElementById('bgColor').value;
+            drawCtx.fillStyle = bg;
+            drawCtx.fillRect(0, 0, 600, 600);
+        }
+
+        function fillBackground() {
+            const bg = document.getElementById('bgColor').value;
+            drawCtx.fillStyle = bg;
+            drawCtx.fillRect(0, 0, 600, 600);
+        }
+
+        // Initialize with background
+        clearCanvas();
+
+        // Main animation loop
         function animate(timestamp) {
-            if (!state.lastTime) state.lastTime = timestamp;
-            const deltaTime = (timestamp - state.lastTime) / 1000;
-            state.lastTime = timestamp;
-
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Update physics
-            if (state.isSpinning) {
-                // Accelerate towards target RPM
-                state.rpm += (state.targetRPM - state.rpm) * 0.1;
-            }
-
-            // Apply friction
-            state.rpm *= settings.friction;
-
-            // Stop if very slow
-            if (state.rpm < 0.1 && state.targetRPM === 0) {
-                state.rpm = 0;
-                state.isSpinning = false;
-            }
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
 
             // Update rotation
-            state.angle += (state.rpm / 60) * Math.PI * 2 * deltaTime;
+            angle += (rpm / 60) * Math.PI * 2 * deltaTime;
 
-            // Update wobble/precession
-            if (state.rpm > 0) {
-                state.wobbleAngle += deltaTime * 3;
-                state.precessionAngle += deltaTime * settings.precession * 2;
+            // Clear display
+            displayCtx.fillStyle = '#1a1a2e';
+            displayCtx.fillRect(0, 0, 600, 600);
+
+            // Draw rotated canvas
+            displayCtx.save();
+            displayCtx.translate(300, 300);
+            displayCtx.rotate(angle);
+            displayCtx.translate(-300, -300);
+
+            // Draw either preview (while drawing shapes) or main canvas
+            if (isDrawing && (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect')) {
+                displayCtx.drawImage(previewCanvas, 0, 0);
+            } else {
+                displayCtx.drawImage(drawCanvas, 0, 0);
             }
 
-            // Calculate tilt based on wobble
-            const wobbleAmount = settings.wobble * Math.max(0, 1 - state.rpm / 100);
-            const tiltX = Math.sin(state.wobbleAngle) * wobbleAmount;
-            const tiltY = Math.cos(state.wobbleAngle + state.precessionAngle) * wobbleAmount;
+            displayCtx.restore();
 
-            // Draw
-            drawTop(tiltX, tiltY);
-            updateStats();
+            // Clip to circle
+            displayCtx.globalCompositeOperation = 'destination-in';
+            displayCtx.beginPath();
+            displayCtx.arc(300, 300, 300, 0, Math.PI * 2);
+            displayCtx.fill();
+            displayCtx.globalCompositeOperation = 'source-over';
+
+            // Update stats
+            document.getElementById('rotation').textContent = Math.round((angle * 180 / Math.PI) % 360) + '°';
+
+            // FPS counter
+            frameCount++;
+            if (timestamp - lastFpsTime > 1000) {
+                document.getElementById('fps').textContent = frameCount + ' FPS';
+                frameCount = 0;
+                lastFpsTime = timestamp;
+            }
 
             requestAnimationFrame(animate);
         }
 
-        // Initialize
-        updateSettings();
         requestAnimationFrame(animate);
     </script>
 </body>
