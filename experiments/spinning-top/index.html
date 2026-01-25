@@ -9,7 +9,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
+            background: #0a0a15;
             height: 100vh;
             height: 100dvh;
             color: #fff;
@@ -22,10 +22,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
-            background: radial-gradient(circle, #252542 0%, #1a1a2e 100%);
+            gap: 20px;
+            background: radial-gradient(ellipse at center, #151528 0%, #0a0a15 100%);
             min-width: 0;
-            padding: 10px;
+            padding: 15px;
         }
 
         .canvas-wrapper {
@@ -33,6 +33,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            position: relative;
         }
 
         .canvas-label {
@@ -41,32 +42,47 @@
             text-transform: uppercase;
         }
 
-        .drawing-canvas {
-            border-radius: 50%;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            cursor: crosshair;
-            touch-action: none;
+        .canvas-container {
+            position: relative;
         }
 
-        #staticCanvas { border: 2px solid #4a6fa5; }
-        #spinningCanvas { border: 2px solid #e74c3c; }
+        .drawing-canvas {
+            border-radius: 50%;
+            cursor: crosshair;
+            touch-action: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        #staticCanvas { box-shadow: 0 0 40px rgba(74, 111, 165, 0.3), inset 0 0 60px rgba(74, 111, 165, 0.1); border: 2px solid #4a6fa5; }
+        #spinningCanvas { box-shadow: 0 0 40px rgba(231, 76, 60, 0.3), inset 0 0 60px rgba(231, 76, 60, 0.1); border: 2px solid #e74c3c; }
 
         .sidebar {
-            width: 260px;
-            background: #252542;
+            width: 280px;
+            background: linear-gradient(180deg, #151528 0%, #0d0d1a 100%);
             padding: 10px;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            border-left: 1px solid #333;
+            border-left: 1px solid #252542;
             overflow-y: auto;
             flex-shrink: 0;
         }
 
         .section {
-            background: #1e1e38;
-            border-radius: 6px;
+            background: linear-gradient(135deg, #1a1a30 0%, #12121f 100%);
+            border-radius: 8px;
             padding: 8px;
+            border: 1px solid #252545;
         }
 
         .section-title {
@@ -87,22 +103,30 @@
             aspect-ratio: 1;
             border: none;
             border-radius: 6px;
-            background: #333;
+            background: #252545;
             color: #fff;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 16px;
-            transition: background 0.15s;
+            transition: all 0.15s;
         }
 
-        .tool-btn:hover { background: #444; }
+        .tool-btn:hover { background: #353565; box-shadow: 0 0 10px rgba(100, 100, 200, 0.3); }
         .tool-btn.active {
-            background: #4a6fa5;
-            box-shadow: 0 0 8px rgba(74, 111, 165, 0.4);
+            background: linear-gradient(135deg, #4a6fa5 0%, #5f27cd 100%);
+            box-shadow: 0 0 15px rgba(95, 39, 205, 0.5);
         }
         .tool-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .tool-btn.neon-active {
+            animation: neonPulse 1.5s infinite;
+        }
+
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.6); }
+        }
 
         .row { display: flex; gap: 6px; align-items: center; }
         .row > * { flex: 1; }
@@ -123,7 +147,7 @@
             flex: 1;
             height: 4px;
             border-radius: 2px;
-            background: #444;
+            background: linear-gradient(90deg, #252545 0%, #353565 100%);
             -webkit-appearance: none;
         }
 
@@ -132,23 +156,25 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #4a6fa5;
+            background: linear-gradient(135deg, #4a6fa5 0%, #5f27cd 100%);
             cursor: pointer;
+            box-shadow: 0 0 8px rgba(95, 39, 205, 0.5);
         }
 
         .slider-row span {
             font-size: 0.75em;
-            color: #4a6fa5;
+            color: #00ffff;
             min-width: 35px;
             text-align: right;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         select {
             width: 100%;
             padding: 6px;
             border-radius: 4px;
-            border: none;
-            background: #333;
+            border: 1px solid #353565;
+            background: #252545;
             color: #fff;
             font-size: 0.8em;
         }
@@ -164,10 +190,11 @@
             border: 2px solid transparent;
             border-radius: 3px;
             cursor: pointer;
+            transition: all 0.15s;
         }
 
-        .color-swatch:hover { border-color: #666; }
-        .color-swatch.selected { border-color: #fff; }
+        .color-swatch:hover { border-color: #666; transform: scale(1.1); }
+        .color-swatch.selected { border-color: #fff; box-shadow: 0 0 10px currentColor; }
 
         input[type="color"] {
             width: 100%;
@@ -185,15 +212,53 @@
             border-radius: 4px;
             font-size: 0.8em;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: all 0.15s;
             font-weight: 500;
         }
 
         .btn:hover { transform: translateY(-1px); }
-        .btn-spin { background: linear-gradient(135deg, #f39c12, #e74c3c); color: #fff; }
-        .btn-stop { background: #e74c3c; color: #fff; }
-        .btn-action { background: #333; color: #fff; }
-        .btn-danger { background: #c0392b; color: #fff; }
+        .btn-spin {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+        }
+        .btn-stop { background: #e74c3c; color: #fff; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+        .btn-action { background: linear-gradient(135deg, #252545 0%, #353565 100%); color: #fff; border: 1px solid #454575; }
+        .btn-danger { background: linear-gradient(135deg, #c0392b 0%, #8b0000 100%); color: #fff; }
+        .btn-neon {
+            background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .btn-export {
+            background: linear-gradient(135deg, #00ff88 0%, #00aa55 100%);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .speed-presets {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .speed-preset {
+            padding: 4px 8px;
+            font-size: 0.7em;
+            border-radius: 4px;
+            border: 1px solid #353565;
+            background: #252545;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .speed-preset:hover {
+            background: #353565;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
 
         .stats {
             font-size: 0.7em;
@@ -203,8 +268,77 @@
             padding-top: 4px;
         }
 
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            color: #ff0000;
+            font-size: 0.75em;
+        }
+
+        .recording-indicator.active {
+            display: flex;
+            animation: recordBlink 1s infinite;
+        }
+
+        @keyframes recordBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .record-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        /* Toggle switches */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .toggle-label {
+            font-size: 0.75em;
+            color: #888;
+        }
+
+        .toggle {
+            width: 36px;
+            height: 20px;
+            background: #252545;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .toggle.active {
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+
+        .toggle.active::after {
+            left: 18px;
+        }
+
         /* Mobile */
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
             body { flex-direction: column; }
 
             .canvas-area {
@@ -220,7 +354,7 @@
                 width: 100%;
                 max-height: 40vh;
                 border-left: none;
-                border-top: 1px solid #333;
+                border-top: 1px solid #252542;
                 padding: 8px;
                 gap: 6px;
                 flex-direction: row;
@@ -263,11 +397,21 @@
                 max-height: none;
                 flex-direction: column;
                 border-top: none;
-                border-left: 1px solid #333;
+                border-left: 1px solid #252542;
             }
 
             .section { flex: 0 0 auto; }
             .color-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+
+        /* Larger canvas for desktop */
+        @media (min-width: 1200px) {
+            .canvas-area { gap: 30px; }
+        }
+
+        @media (min-width: 1600px) {
+            .sidebar { width: 320px; }
+            .canvas-area { gap: 40px; }
         }
     </style>
 </head>
@@ -275,11 +419,17 @@
     <div class="canvas-area">
         <div class="canvas-wrapper">
             <span class="canvas-label">Static</span>
-            <canvas id="staticCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+            <div class="canvas-container">
+                <canvas id="staticCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+                <canvas id="staticParticles" class="particle-canvas" width="600" height="600"></canvas>
+            </div>
         </div>
         <div class="canvas-wrapper">
             <span class="canvas-label">Spinning</span>
-            <canvas id="spinningCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+            <div class="canvas-container">
+                <canvas id="spinningCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+                <canvas id="spinningParticles" class="particle-canvas" width="600" height="600"></canvas>
+            </div>
         </div>
     </div>
 
@@ -287,14 +437,14 @@
         <div class="section">
             <div class="section-title">Tools</div>
             <div class="tool-grid">
-                <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
-                <button class="tool-btn" data-tool="line" title="Line">📏</button>
-                <button class="tool-btn" data-tool="circle" title="Circle">⭕</button>
-                <button class="tool-btn" data-tool="rect" title="Rectangle">⬜</button>
-                <button class="tool-btn" data-tool="fill" title="Fill">🪣</button>
-                <button class="tool-btn" data-tool="eraser" title="Eraser">🧽</button>
-                <button class="tool-btn" id="undoBtn" onclick="undo()" title="Undo">↩️</button>
-                <button class="tool-btn" id="redoBtn" onclick="redo()" title="Redo">↪️</button>
+                <button class="tool-btn active" data-tool="pencil" title="Pencil (P)">✏️</button>
+                <button class="tool-btn" data-tool="line" title="Line (L)">📏</button>
+                <button class="tool-btn" data-tool="circle" title="Circle (C)">⭕</button>
+                <button class="tool-btn" data-tool="rect" title="Rectangle (R)">⬜</button>
+                <button class="tool-btn" data-tool="fill" title="Fill (F)">🪣</button>
+                <button class="tool-btn" data-tool="eraser" title="Eraser (E)">🧽</button>
+                <button class="tool-btn" id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)">↩️</button>
+                <button class="tool-btn" id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)">↪️</button>
             </div>
         </div>
 
@@ -304,6 +454,14 @@
                 <label>RPM</label>
                 <input type="range" id="speed" min="-500" max="500" value="0">
                 <span id="speedValue">0</span>
+            </div>
+            <div class="speed-presets">
+                <button class="speed-preset" onclick="setSpeed(-120)">-120</button>
+                <button class="speed-preset" onclick="setSpeed(-60)">-60</button>
+                <button class="speed-preset" onclick="setSpeed(0)">0</button>
+                <button class="speed-preset" onclick="setSpeed(60)">60</button>
+                <button class="speed-preset" onclick="setSpeed(120)">120</button>
+                <button class="speed-preset" onclick="setSpeed(300)">300</button>
             </div>
             <div class="row" style="margin-top:6px">
                 <button class="btn btn-spin" onclick="spinIt()">SPIN!</button>
@@ -339,12 +497,33 @@
                 <option value="radial-8">Radial 8</option>
                 <option value="radial-12">Radial 12</option>
             </select>
+            <div class="toggle-row" style="margin-top:6px">
+                <span class="toggle-label">Rainbow Brush</span>
+                <div class="toggle" id="rainbowToggle" onclick="toggleRainbow()"></div>
+            </div>
         </div>
 
         <div class="section">
             <div class="section-title">Color</div>
             <div class="color-grid" id="palette"></div>
             <input type="color" id="colorPicker" value="#ffffff">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Effects</div>
+            <div class="toggle-row">
+                <span class="toggle-label">Neon Glow</span>
+                <div class="toggle active" id="glowToggle" onclick="toggleGlow()"></div>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Particles</span>
+                <div class="toggle active" id="particleToggle" onclick="toggleParticles()"></div>
+            </div>
+            <div class="slider-row" style="margin-top:6px">
+                <label>Glow</label>
+                <input type="range" id="glowIntensity" min="0" max="50" value="20">
+                <span id="glowValue">20</span>
+            </div>
         </div>
 
         <div class="section">
@@ -358,7 +537,19 @@
             <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
             <div class="slider-row" style="margin-top:6px">
                 <label>BG</label>
-                <input type="color" id="bgColor" value="#1a1a2e" style="flex:1;height:24px">
+                <input type="color" id="bgColor" value="#0a0a15" style="flex:1;height:24px">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Export</div>
+            <div class="row">
+                <button class="btn btn-export" onclick="exportPNG()">PNG</button>
+                <button class="btn btn-neon" id="recordBtn" onclick="toggleRecording()">REC</button>
+            </div>
+            <div class="recording-indicator" id="recordingIndicator">
+                <div class="record-dot"></div>
+                <span id="recordTime">0:00</span>
             </div>
         </div>
 
@@ -370,6 +561,7 @@
     </div>
 
     <canvas id="drawCanvas" width="600" height="600" style="display:none"></canvas>
+    <canvas id="exportCanvas" width="600" height="600" style="display:none"></canvas>
 
     <script>
         const staticCanvas = document.getElementById('staticCanvas');
@@ -378,6 +570,12 @@
         const spinningCtx = spinningCanvas.getContext('2d');
         const drawCanvas = document.getElementById('drawCanvas');
         const drawCtx = drawCanvas.getContext('2d');
+        const staticParticles = document.getElementById('staticParticles');
+        const staticParticlesCtx = staticParticles.getContext('2d');
+        const spinningParticles = document.getElementById('spinningParticles');
+        const spinningParticlesCtx = spinningParticles.getContext('2d');
+        const exportCanvas = document.getElementById('exportCanvas');
+        const exportCtx = exportCanvas.getContext('2d');
 
         const CANVAS_SIZE = 600;
         const SNAP_THRESHOLD = 20;
@@ -396,17 +594,79 @@
         let currentTool = 'pencil', isDrawing = false, activeCanvas = null;
         let lastX = 0, lastY = 0, startX = 0, startY = 0;
         let currentColor = '#ffffff', brushSize = 8, opacity = 1, symmetry = 'none';
+        let rainbowMode = false, rainbowHue = 0;
+
+        // Effects
+        let glowEnabled = true, glowIntensity = 20;
+        let particlesEnabled = true;
+        let particles = [];
+
+        // Recording
+        let isRecording = false, recordedFrames = [], recordStartTime = 0;
 
         // Preview canvas
         let previewCanvas = document.createElement('canvas');
         previewCanvas.width = previewCanvas.height = CANVAS_SIZE;
         let previewCtx = previewCanvas.getContext('2d');
 
-        // Colors
+        // Particle system - toroidal flow
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                const a = Math.random() * Math.PI * 2;
+                this.angle = a;
+                this.radius = Math.random() * 30 + 10;
+                this.speed = Math.random() * 2 + 1;
+                this.size = Math.random() * 3 + 1;
+                this.hue = Math.random() * 360;
+                this.alpha = Math.random() * 0.5 + 0.3;
+                this.z = Math.random(); // depth for 3D effect
+            }
+
+            update(dt) {
+                // Toroidal motion: spiral outward then reset
+                this.radius += this.speed * dt * 60;
+                this.angle += (0.02 + (rpm / 1000)) * dt * 60;
+                this.hue = (this.hue + 1) % 360;
+
+                // Fade out as approaching edge
+                const maxRadius = CANVAS_SIZE / 2 - 20;
+                if (this.radius > maxRadius * 0.7) {
+                    this.alpha = Math.max(0, this.alpha - 0.02);
+                }
+
+                if (this.radius > maxRadius || this.alpha <= 0) {
+                    this.reset();
+                }
+            }
+
+            draw(ctx, centerX, centerY, rotationAngle = 0) {
+                const x = centerX + Math.cos(this.angle + rotationAngle) * this.radius;
+                const y = centerY + Math.sin(this.angle + rotationAngle) * this.radius;
+
+                ctx.beginPath();
+                ctx.arc(x, y, this.size * (0.5 + this.z * 0.5), 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.alpha})`;
+                ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
+        }
+
+        // Colors - neon palette
         const colors = [
-            '#ffffff','#c0c0c0','#808080','#000000','#ff0000','#800000','#ff6b6b','#feca57',
-            '#ffff00','#808000','#00ff00','#008000','#48dbfb','#1dd1a1','#00ffff','#008080',
-            '#0000ff','#000080','#ff00ff','#800080','#5f27cd','#ff9f43','#ee5a24','#009432'
+            '#ffffff','#ff00ff','#00ffff','#ff0080','#00ff80','#8000ff','#ff8000','#80ff00',
+            '#ff0000','#ff4400','#ffff00','#00ff00','#00ff88','#0088ff','#0000ff','#4400ff',
+            '#ff00aa','#aa00ff','#ff6600','#ffcc00','#ccff00','#00ffcc','#00ccff','#cc00ff'
         ];
 
         const paletteEl = document.getElementById('palette');
@@ -414,6 +674,7 @@
             const div = document.createElement('div');
             div.className = 'color-swatch' + (i === 0 ? ' selected' : '');
             div.style.background = c;
+            div.style.boxShadow = `0 0 8px ${c}40`;
             div.onclick = () => {
                 currentColor = c;
                 document.getElementById('colorPicker').value = c;
@@ -460,7 +721,17 @@
             document.getElementById('opacityValue').textContent = e.target.value + '%';
         });
 
+        document.getElementById('glowIntensity').addEventListener('input', e => {
+            glowIntensity = parseInt(e.target.value);
+            document.getElementById('glowValue').textContent = glowIntensity;
+        });
+
         document.getElementById('symmetry').addEventListener('change', e => symmetry = e.target.value);
+
+        function setSpeed(v) {
+            rpm = targetRpm = v;
+            updateSpeedDisplay();
+        }
 
         function spinIt() {
             rpm = (Math.random() > 0.5 ? 1 : -1) * (300 + Math.random() * 200);
@@ -476,6 +747,21 @@
         function updateSpeedDisplay() {
             document.getElementById('speed').value = Math.round(rpm);
             document.getElementById('speedValue').textContent = Math.round(rpm);
+        }
+
+        function toggleRainbow() {
+            rainbowMode = !rainbowMode;
+            document.getElementById('rainbowToggle').classList.toggle('active', rainbowMode);
+        }
+
+        function toggleGlow() {
+            glowEnabled = !glowEnabled;
+            document.getElementById('glowToggle').classList.toggle('active', glowEnabled);
+        }
+
+        function toggleParticles() {
+            particlesEnabled = !particlesEnabled;
+            document.getElementById('particleToggle').classList.toggle('active', particlesEnabled);
         }
 
         // History
@@ -512,21 +798,30 @@
             document.getElementById('historyCount').textContent = `${historyIndex + 1}/${history.length}`;
         }
 
-        // Resize
+        // Resize - larger for desktop
         function resizeCanvases() {
             const container = document.querySelector('.canvas-area');
-            const isVertical = container.offsetWidth < 600;
+            const isVertical = container.offsetWidth < 700;
             let w, h;
             if (isVertical) {
                 w = container.clientWidth - 16;
                 h = (container.clientHeight - 24) / 2;
             } else {
-                w = (container.clientWidth - 24) / 2;
-                h = container.clientHeight - 16;
+                w = (container.clientWidth - 40) / 2;
+                h = container.clientHeight - 20;
             }
-            const size = Math.min(w, h, 350);
-            staticCanvas.style.width = staticCanvas.style.height = size + 'px';
-            spinningCanvas.style.width = spinningCanvas.style.height = size + 'px';
+
+            // Larger canvas for desktop
+            let maxSize = 350;
+            if (window.innerWidth >= 1200) maxSize = 450;
+            if (window.innerWidth >= 1600) maxSize = 550;
+
+            const size = Math.min(w, h, maxSize);
+
+            [staticCanvas, spinningCanvas, staticParticles, spinningParticles].forEach(c => {
+                c.style.width = c.style.height = size + 'px';
+            });
+
             canvasScale = CANVAS_SIZE / size;
         }
         window.addEventListener('resize', resizeCanvases);
@@ -564,6 +859,14 @@
             return pts;
         }
 
+        function getCurrentColor() {
+            if (rainbowMode) {
+                rainbowHue = (rainbowHue + 2) % 360;
+                return `hsl(${rainbowHue}, 100%, 50%)`;
+            }
+            return currentColor;
+        }
+
         function startDrawing(e, canvas) {
             isDrawing = true;
             activeCanvas = canvas;
@@ -571,7 +874,7 @@
             lastX = startX = coords.x;
             lastY = startY = coords.y;
             if (currentTool === 'fill') {
-                floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
+                floodFill(Math.round(coords.x), Math.round(coords.y), getCurrentColor());
                 isDrawing = false;
                 saveState();
             } else if (currentTool === 'pencil' || currentTool === 'eraser') {
@@ -605,39 +908,62 @@
         }
 
         function drawDot(x, y) {
-            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : getCurrentColor();
             drawCtx.globalAlpha = opacity;
             drawCtx.fillStyle = color;
+
+            if (glowEnabled && currentTool !== 'eraser') {
+                drawCtx.shadowColor = color;
+                drawCtx.shadowBlur = glowIntensity;
+            }
+
             getSymmetryPoints(x, y).forEach(p => {
                 drawCtx.beginPath();
                 drawCtx.arc(p.x, p.y, brushSize / 2, 0, Math.PI * 2);
                 drawCtx.fill();
             });
+
+            drawCtx.shadowBlur = 0;
             drawCtx.globalAlpha = 1;
         }
 
         function drawLineSymmetric(x1, y1, x2, y2) {
             const pts1 = getSymmetryPoints(x1, y1), pts2 = getSymmetryPoints(x2, y2);
-            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : getCurrentColor();
             drawCtx.globalAlpha = opacity;
             drawCtx.strokeStyle = color;
             drawCtx.lineWidth = brushSize;
             drawCtx.lineCap = drawCtx.lineJoin = 'round';
+
+            if (glowEnabled && currentTool !== 'eraser') {
+                drawCtx.shadowColor = color;
+                drawCtx.shadowBlur = glowIntensity;
+            }
+
             for (let i = 0; i < pts1.length; i++) {
                 drawCtx.beginPath();
                 drawCtx.moveTo(pts1[i].x, pts1[i].y);
                 drawCtx.lineTo(pts2[i].x, pts2[i].y);
                 drawCtx.stroke();
             }
+
+            drawCtx.shadowBlur = 0;
             drawCtx.globalAlpha = 1;
         }
 
         function drawShapeSymmetric(ctx, x1, y1, x2, y2) {
             const pts1 = getSymmetryPoints(x1, y1), pts2 = getSymmetryPoints(x2, y2);
+            const color = getCurrentColor();
             ctx.globalAlpha = opacity;
-            ctx.strokeStyle = currentColor;
+            ctx.strokeStyle = color;
             ctx.lineWidth = brushSize;
             ctx.lineCap = 'round';
+
+            if (glowEnabled) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = glowIntensity;
+            }
+
             for (let i = 0; i < pts1.length; i++) {
                 const p1 = pts1[i], p2 = pts2[i];
                 ctx.beginPath();
@@ -649,6 +975,8 @@
                     ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
                 }
             }
+
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         }
 
@@ -656,7 +984,7 @@
             const img = drawCtx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             const d = img.data, idx = (sy * CANVAS_SIZE + sx) * 4;
             const sR = d[idx], sG = d[idx + 1], sB = d[idx + 2];
-            const fill = hexToRgb(fillColor);
+            const fill = parseColor(fillColor);
             if (!fill || (sR === fill.r && sG === fill.g && sB === fill.b)) return;
             const stack = [[sx, sy]], visited = new Set();
             while (stack.length) {
@@ -671,9 +999,33 @@
             drawCtx.putImageData(img, 0, 0);
         }
 
-        function hexToRgb(hex) {
-            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
+        function parseColor(color) {
+            // Handle hex
+            const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+            if (hexMatch) {
+                return { r: parseInt(hexMatch[1], 16), g: parseInt(hexMatch[2], 16), b: parseInt(hexMatch[3], 16) };
+            }
+            // Handle hsl
+            const hslMatch = /hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/.exec(color);
+            if (hslMatch) {
+                return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
+            }
+            return null;
+        }
+
+        function hslToRgb(h, s, l) {
+            s /= 100; l /= 100;
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
         }
 
         [staticCanvas, spinningCanvas].forEach(c => {
@@ -692,6 +1044,15 @@
             if (key === 'z' && (e.ctrlKey || e.metaKey)) { e.shiftKey ? redo() : undo(); e.preventDefault(); }
             else if (key === 'y' && (e.ctrlKey || e.metaKey)) { redo(); e.preventDefault(); }
             else if (key === ' ') { e.preventDefault(); Math.abs(rpm) < 10 ? spinIt() : stopSpin(); }
+            else if (key === 'p') document.querySelector('[data-tool="pencil"]').click();
+            else if (key === 'l') document.querySelector('[data-tool="line"]').click();
+            else if (key === 'c') document.querySelector('[data-tool="circle"]').click();
+            else if (key === 'r') document.querySelector('[data-tool="rect"]').click();
+            else if (key === 'f') document.querySelector('[data-tool="fill"]').click();
+            else if (key === 'e') document.querySelector('[data-tool="eraser"]').click();
+            else if (key === 'g') toggleGlow();
+            else if (key === 'n') toggleParticles();
+            else if (key === 'b') toggleRainbow();
         });
 
         function clearCanvas() {
@@ -719,6 +1080,91 @@
         document.getElementById('imageInput').addEventListener('change', e => { loadImage(e.target.files[0]); e.target.value = ''; });
         document.getElementById('cameraInput').addEventListener('change', e => { loadImage(e.target.files[0]); e.target.value = ''; });
 
+        // Export functions
+        function exportPNG() {
+            // Combine spinning canvas view with particles
+            exportCtx.fillStyle = document.getElementById('bgColor').value;
+            exportCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+            exportCtx.save();
+            exportCtx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+            exportCtx.rotate(angle);
+            exportCtx.translate(-CANVAS_SIZE / 2, -CANVAS_SIZE / 2);
+            exportCtx.drawImage(drawCanvas, 0, 0);
+            exportCtx.restore();
+
+            // Clip to circle
+            exportCtx.globalCompositeOperation = 'destination-in';
+            exportCtx.beginPath();
+            exportCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            exportCtx.fill();
+            exportCtx.globalCompositeOperation = 'source-over';
+
+            const link = document.createElement('a');
+            link.download = `spin-art-${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        let mediaRecorder, recordedChunks = [];
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            recordedChunks = [];
+            const stream = spinningCanvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `spin-art-${Date.now()}.webm`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordStartTime = Date.now();
+            document.getElementById('recordBtn').textContent = 'STOP';
+            document.getElementById('recordBtn').classList.add('btn-stop');
+            document.getElementById('recordBtn').classList.remove('btn-neon');
+            document.getElementById('recordingIndicator').classList.add('active');
+            updateRecordTime();
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            document.getElementById('recordBtn').textContent = 'REC';
+            document.getElementById('recordBtn').classList.remove('btn-stop');
+            document.getElementById('recordBtn').classList.add('btn-neon');
+            document.getElementById('recordingIndicator').classList.remove('active');
+        }
+
+        function updateRecordTime() {
+            if (!isRecording) return;
+            const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('recordTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            requestAnimationFrame(updateRecordTime);
+        }
+
         // Init
         clearCanvas();
 
@@ -734,30 +1180,52 @@
 
             angle += (rpm / 60) * Math.PI * 2 * dt;
 
-            // Static
-            staticCtx.fillStyle = '#1a1a2e';
+            // Update particles
+            if (particlesEnabled) {
+                particles.forEach(p => p.update(dt));
+            }
+
+            const bgColor = document.getElementById('bgColor').value;
+            const cx = CANVAS_SIZE / 2, cy = CANVAS_SIZE / 2;
+
+            // Static canvas
+            staticCtx.fillStyle = bgColor;
             staticCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             staticCtx.drawImage(isDrawing && activeCanvas === staticCanvas && ['line', 'circle', 'rect'].includes(currentTool) ? previewCanvas : drawCanvas, 0, 0);
             staticCtx.globalCompositeOperation = 'destination-in';
             staticCtx.beginPath();
-            staticCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            staticCtx.arc(cx, cy, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
             staticCtx.fill();
             staticCtx.globalCompositeOperation = 'source-over';
 
-            // Spinning
-            spinningCtx.fillStyle = '#1a1a2e';
+            // Spinning canvas
+            spinningCtx.fillStyle = bgColor;
             spinningCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             spinningCtx.save();
-            spinningCtx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+            spinningCtx.translate(cx, cy);
             spinningCtx.rotate(angle);
-            spinningCtx.translate(-CANVAS_SIZE / 2, -CANVAS_SIZE / 2);
+            spinningCtx.translate(-cx, -cy);
             spinningCtx.drawImage(isDrawing && activeCanvas === spinningCanvas && ['line', 'circle', 'rect'].includes(currentTool) ? previewCanvas : drawCanvas, 0, 0);
             spinningCtx.restore();
             spinningCtx.globalCompositeOperation = 'destination-in';
             spinningCtx.beginPath();
-            spinningCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            spinningCtx.arc(cx, cy, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
             spinningCtx.fill();
             spinningCtx.globalCompositeOperation = 'source-over';
+
+            // Draw particles
+            if (particlesEnabled) {
+                staticParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                spinningParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+                particles.forEach(p => {
+                    p.draw(staticParticlesCtx, cx, cy, 0);
+                    p.draw(spinningParticlesCtx, cx, cy, angle);
+                });
+            } else {
+                staticParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                spinningParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            }
 
             document.getElementById('rotation').textContent = Math.round((angle * 180 / Math.PI) % 360) + '°';
 
