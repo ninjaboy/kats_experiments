@@ -2,789 +2,1243 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spinning Top Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spin Art - Drawing Top</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
+            background: #0a0a15;
+            height: 100vh;
+            height: 100dvh;
             color: #fff;
-        }
-
-        .container {
             display: flex;
-            flex-wrap: wrap;
-            padding: 20px;
-            gap: 20px;
+            overflow: hidden;
         }
 
-        .canvas-container {
+        .canvas-area {
             flex: 1;
-            min-width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: radial-gradient(ellipse at center, #151528 0%, #0a0a15 100%);
+            min-width: 0;
+            padding: 15px;
+        }
+
+        .canvas-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 4px;
+            position: relative;
         }
 
-        canvas {
-            background: radial-gradient(ellipse at center, #2a2a4a 0%, #1a1a2e 100%);
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        .canvas-label {
+            font-size: 0.7em;
+            color: #555;
+            text-transform: uppercase;
         }
 
-        .controls {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 20px;
-            width: 320px;
-            max-height: 90vh;
-            overflow-y: auto;
+        .canvas-container {
+            position: relative;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        h2 {
-            font-size: 1em;
-            margin: 15px 0 10px;
-            color: #48dbfb;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
-        }
-
-        .control-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.85em;
-            color: #aaa;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255,255,255,0.2);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+        .drawing-canvas {
             border-radius: 50%;
-            background: #48dbfb;
-            cursor: pointer;
+            cursor: crosshair;
+            touch-action: none;
+            position: relative;
+            z-index: 2;
         }
 
-        input[type="color"] {
-            width: 100%;
-            height: 35px;
+        .particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        #staticCanvas { box-shadow: 0 0 40px rgba(74, 111, 165, 0.3), inset 0 0 60px rgba(74, 111, 165, 0.1); border: 2px solid #4a6fa5; }
+        #spinningCanvas { box-shadow: 0 0 40px rgba(231, 76, 60, 0.3), inset 0 0 60px rgba(231, 76, 60, 0.1); border: 2px solid #e74c3c; }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #151528 0%, #0d0d1a 100%);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 1px solid #252542;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .section {
+            background: linear-gradient(135deg, #1a1a30 0%, #12121f 100%);
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid #252545;
+        }
+
+        .section-title {
+            font-size: 0.7em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .tool-btn {
+            aspect-ratio: 1;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
+            background: #252545;
+            color: #fff;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.15s;
+        }
+
+        .tool-btn:hover { background: #353565; box-shadow: 0 0 10px rgba(100, 100, 200, 0.3); }
+        .tool-btn.active {
+            background: linear-gradient(135deg, #4a6fa5 0%, #5f27cd 100%);
+            box-shadow: 0 0 15px rgba(95, 39, 205, 0.5);
+        }
+        .tool-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .tool-btn.neon-active {
+            animation: neonPulse 1.5s infinite;
+        }
+
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.6); }
+        }
+
+        .row { display: flex; gap: 6px; align-items: center; }
+        .row > * { flex: 1; }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slider-row label {
+            font-size: 0.75em;
+            color: #888;
+            min-width: 50px;
+        }
+
+        .slider-row input[type="range"] {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #252545 0%, #353565 100%);
+            -webkit-appearance: none;
+        }
+
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a6fa5 0%, #5f27cd 100%);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(95, 39, 205, 0.5);
+        }
+
+        .slider-row span {
+            font-size: 0.75em;
+            color: #00ffff;
+            min-width: 35px;
+            text-align: right;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
         select {
             width: 100%;
-            padding: 8px;
-            border-radius: 5px;
-            border: none;
-            background: rgba(255,255,255,0.2);
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #353565;
+            background: #252545;
             color: #fff;
-            font-size: 0.9em;
+            font-size: 0.8em;
         }
 
-        select option {
-            background: #1a1a2e;
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 3px;
         }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
+        .color-swatch {
+            aspect-ratio: 1;
+            border: 2px solid transparent;
+            border-radius: 3px;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.15s;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        .color-swatch:hover { border-color: #666; transform: scale(1.1); }
+        .color-swatch.selected { border-color: #fff; box-shadow: 0 0 10px currentColor; }
+
+        input[type="color"] {
+            width: 100%;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+            margin-top: 4px;
         }
 
+        .btn {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
         .btn-spin {
-            background: linear-gradient(90deg, #ff6b6b, #feca57);
-            color: #1a1a2e;
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+        }
+        .btn-stop { background: #e74c3c; color: #fff; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+        .btn-action { background: linear-gradient(135deg, #252545 0%, #353565 100%); color: #fff; border: 1px solid #454575; }
+        .btn-danger { background: linear-gradient(135deg, #c0392b 0%, #8b0000 100%); color: #fff; }
+        .btn-neon {
+            background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .btn-export {
+            background: linear-gradient(135deg, #00ff88 0%, #00aa55 100%);
+            color: #000;
             font-weight: bold;
         }
 
-        .btn-stop {
-            background: linear-gradient(90deg, #576574, #8395a7);
-            color: #fff;
+        .speed-presets {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
         }
 
-        .btn-reset {
-            background: linear-gradient(90deg, #48dbfb, #0abde3);
-            color: #1a1a2e;
+        .speed-preset {
+            padding: 4px 8px;
+            font-size: 0.7em;
+            border-radius: 4px;
+            border: 1px solid #353565;
+            background: #252545;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .speed-preset:hover {
+            background: #353565;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
 
         .stats {
-            background: rgba(0,0,0,0.3);
-            border-radius: 5px;
-            padding: 10px;
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 0.85em;
-        }
-
-        .stats div {
+            font-size: 0.7em;
+            color: #555;
             display: flex;
             justify-content: space-between;
-            margin: 3px 0;
+            padding-top: 4px;
         }
 
-        .stats span:last-child {
-            color: #48dbfb;
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            color: #ff0000;
+            font-size: 0.75em;
         }
 
-        .presets {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
+        .recording-indicator.active {
+            display: flex;
+            animation: recordBlink 1s infinite;
         }
 
-        .preset-btn {
-            padding: 8px;
-            font-size: 0.8em;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            margin-top: 0;
+        @keyframes recordBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .preset-btn:hover {
-            background: rgba(255,255,255,0.2);
+        .record-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff0000;
         }
 
-        .instructions {
+        /* Toggle switches */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .toggle-label {
             font-size: 0.75em;
             color: #888;
-            margin-top: 15px;
-            line-height: 1.5;
+        }
+
+        .toggle {
+            width: 36px;
+            height: 20px;
+            background: #252545;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .toggle.active {
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+
+        .toggle.active::after {
+            left: 18px;
+        }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+
+            .canvas-area {
+                flex: 1;
+                min-height: 0;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .canvas-label { display: none; }
+
+            .sidebar {
+                width: 100%;
+                max-height: 40vh;
+                border-left: none;
+                border-top: 1px solid #252542;
+                padding: 8px;
+                gap: 6px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .section {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 140px;
+                padding: 6px;
+            }
+
+            .section.full-width { flex: 1 1 100%; }
+
+            .tool-grid { grid-template-columns: repeat(8, 1fr); }
+
+            .color-grid { grid-template-columns: repeat(12, 1fr); }
+
+            .section-title { font-size: 0.65em; margin-bottom: 4px; }
+            .btn { padding: 6px; font-size: 0.75em; }
+            .slider-row label { min-width: 40px; font-size: 0.7em; }
+            .slider-row span { min-width: 28px; font-size: 0.7em; }
+        }
+
+        @media (max-width: 500px) {
+            .sidebar { max-height: 45vh; }
+            .section { flex: 1 1 100%; }
+            .tool-grid { grid-template-columns: repeat(8, 1fr); }
+            .tool-btn { font-size: 14px; }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { flex-direction: row; }
+
+            .canvas-area { flex-direction: row; }
+
+            .sidebar {
+                width: 220px;
+                max-height: none;
+                flex-direction: column;
+                border-top: none;
+                border-left: 1px solid #252542;
+            }
+
+            .section { flex: 0 0 auto; }
+            .color-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+
+        /* Larger canvas for desktop */
+        @media (min-width: 1200px) {
+            .canvas-area { gap: 30px; }
+        }
+
+        @media (min-width: 1600px) {
+            .sidebar { width: 320px; }
+            .canvas-area { gap: 40px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="canvas-container">
-            <canvas id="canvas" width="600" height="600"></canvas>
+    <div class="canvas-area">
+        <div class="canvas-wrapper">
+            <span class="canvas-label">Static</span>
+            <div class="canvas-container">
+                <canvas id="staticCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+                <canvas id="staticParticles" class="particle-canvas" width="600" height="600"></canvas>
+            </div>
         </div>
-
-        <div class="controls">
-            <h1>Spinning Top Lab</h1>
-
-            <h2>Physics</h2>
-            <div class="control-group">
-                <label>Spin Speed: <span id="speedValue">50</span> RPM</label>
-                <input type="range" id="speed" min="0" max="200" value="50">
-            </div>
-            <div class="control-group">
-                <label>Friction: <span id="frictionValue">0.995</span></label>
-                <input type="range" id="friction" min="980" max="1000" value="995">
-            </div>
-            <div class="control-group">
-                <label>Wobble Amount: <span id="wobbleValue">0.3</span></label>
-                <input type="range" id="wobble" min="0" max="100" value="30">
-            </div>
-            <div class="control-group">
-                <label>Precession Speed: <span id="precessionValue">0.5</span></label>
-                <input type="range" id="precession" min="0" max="100" value="50">
-            </div>
-
-            <h2>Top Design</h2>
-            <div class="control-group">
-                <label>Shape</label>
-                <select id="shape">
-                    <option value="classic">Classic</option>
-                    <option value="flat">Flat Disc</option>
-                    <option value="cone">Cone</option>
-                    <option value="tiered">Tiered</option>
-                    <option value="mushroom">Mushroom</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>Pattern</label>
-                <select id="pattern">
-                    <option value="spiral">Spiral</option>
-                    <option value="segments">Segments</option>
-                    <option value="rings">Concentric Rings</option>
-                    <option value="dots">Dots</option>
-                    <option value="stripes">Radial Stripes</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>Segments: <span id="segmentsValue">8</span></label>
-                <input type="range" id="segments" min="2" max="24" value="8">
-            </div>
-            <div class="control-group">
-                <label>Size: <span id="sizeValue">100</span></label>
-                <input type="range" id="size" min="50" max="150" value="100">
-            </div>
-
-            <h2>Colors</h2>
-            <div class="control-group">
-                <label>Primary Color</label>
-                <input type="color" id="color1" value="#ff6b6b">
-            </div>
-            <div class="control-group">
-                <label>Secondary Color</label>
-                <input type="color" id="color2" value="#48dbfb">
-            </div>
-            <div class="control-group">
-                <label>Accent Color</label>
-                <input type="color" id="color3" value="#feca57">
-            </div>
-
-            <h2>Presets</h2>
-            <div class="presets">
-                <button class="preset-btn" onclick="loadPreset('classic')">Classic</button>
-                <button class="preset-btn" onclick="loadPreset('hypnotic')">Hypnotic</button>
-                <button class="preset-btn" onclick="loadPreset('rainbow')">Rainbow</button>
-                <button class="preset-btn" onclick="loadPreset('minimal')">Minimal</button>
-            </div>
-
-            <h2>Controls</h2>
-            <button class="btn-spin" onclick="spin()">Spin!</button>
-            <button class="btn-stop" onclick="stop()">Stop</button>
-            <button class="btn-reset" onclick="reset()">Reset</button>
-
-            <div class="stats">
-                <div><span>Current RPM:</span><span id="currentRPM">0</span></div>
-                <div><span>Rotation:</span><span id="rotation">0°</span></div>
-                <div><span>Tilt Angle:</span><span id="tilt">0°</span></div>
-                <div><span>Time Spinning:</span><span id="spinTime">0s</span></div>
-            </div>
-
-            <div class="instructions">
-                <strong>Tips:</strong><br>
-                - Click "Spin!" to start the top<br>
-                - Adjust wobble to see precession effects<br>
-                - Try different shapes and patterns<br>
-                - High friction = longer spin time
+        <div class="canvas-wrapper">
+            <span class="canvas-label">Spinning</span>
+            <div class="canvas-container">
+                <canvas id="spinningCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+                <canvas id="spinningParticles" class="particle-canvas" width="600" height="600"></canvas>
             </div>
         </div>
     </div>
 
+    <div class="sidebar">
+        <div class="section">
+            <div class="section-title">Tools</div>
+            <div class="tool-grid">
+                <button class="tool-btn active" data-tool="pencil" title="Pencil (P)">✏️</button>
+                <button class="tool-btn" data-tool="line" title="Line (L)">📏</button>
+                <button class="tool-btn" data-tool="circle" title="Circle (C)">⭕</button>
+                <button class="tool-btn" data-tool="rect" title="Rectangle (R)">⬜</button>
+                <button class="tool-btn" data-tool="fill" title="Fill (F)">🪣</button>
+                <button class="tool-btn" data-tool="eraser" title="Eraser (E)">🧽</button>
+                <button class="tool-btn" id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)">↩️</button>
+                <button class="tool-btn" id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)">↪️</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Spin</div>
+            <div class="slider-row">
+                <label>RPM</label>
+                <input type="range" id="speed" min="-500" max="500" value="0">
+                <span id="speedValue">0</span>
+            </div>
+            <div class="speed-presets">
+                <button class="speed-preset" onclick="setSpeed(-120)">-120</button>
+                <button class="speed-preset" onclick="setSpeed(-60)">-60</button>
+                <button class="speed-preset" onclick="setSpeed(0)">0</button>
+                <button class="speed-preset" onclick="setSpeed(60)">60</button>
+                <button class="speed-preset" onclick="setSpeed(120)">120</button>
+                <button class="speed-preset" onclick="setSpeed(300)">300</button>
+            </div>
+            <div class="row" style="margin-top:6px">
+                <button class="btn btn-spin" onclick="spinIt()">SPIN!</button>
+                <button class="btn btn-stop" onclick="stopSpin()">STOP</button>
+            </div>
+            <div class="slider-row" style="margin-top:6px">
+                <label>Friction</label>
+                <input type="range" id="friction" min="0" max="100" value="50">
+                <span id="frictionValue">50%</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Brush</div>
+            <div class="slider-row">
+                <label>Size</label>
+                <input type="range" id="brushSize" min="1" max="50" value="8">
+                <span id="brushSizeValue">8</span>
+            </div>
+            <div class="slider-row">
+                <label>Opacity</label>
+                <input type="range" id="opacity" min="10" max="100" value="100">
+                <span id="opacityValue">100%</span>
+            </div>
+            <select id="symmetry" style="margin-top:6px">
+                <option value="none">No Symmetry</option>
+                <option value="mirror-h">Mirror H</option>
+                <option value="mirror-v">Mirror V</option>
+                <option value="point">Point 180°</option>
+                <option value="radial-3">Radial 3</option>
+                <option value="radial-4">Radial 4</option>
+                <option value="radial-6">Radial 6</option>
+                <option value="radial-8">Radial 8</option>
+                <option value="radial-12">Radial 12</option>
+            </select>
+            <div class="toggle-row" style="margin-top:6px">
+                <span class="toggle-label">Rainbow Brush</span>
+                <div class="toggle" id="rainbowToggle" onclick="toggleRainbow()"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Color</div>
+            <div class="color-grid" id="palette"></div>
+            <input type="color" id="colorPicker" value="#ffffff">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Effects</div>
+            <div class="toggle-row">
+                <span class="toggle-label">Neon Glow</span>
+                <div class="toggle active" id="glowToggle" onclick="toggleGlow()"></div>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Particles</span>
+                <div class="toggle active" id="particleToggle" onclick="toggleParticles()"></div>
+            </div>
+            <div class="slider-row" style="margin-top:6px">
+                <label>Glow</label>
+                <input type="range" id="glowIntensity" min="0" max="50" value="20">
+                <span id="glowValue">20</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Canvas</div>
+            <div class="row">
+                <button class="btn btn-action" onclick="document.getElementById('imageInput').click()">Load</button>
+                <button class="btn btn-action" onclick="document.getElementById('cameraInput').click()">Photo</button>
+                <button class="btn btn-danger" onclick="clearCanvas()">Clear</button>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" style="display:none">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+            <div class="slider-row" style="margin-top:6px">
+                <label>BG</label>
+                <input type="color" id="bgColor" value="#0a0a15" style="flex:1;height:24px">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Export</div>
+            <div class="row">
+                <button class="btn btn-export" onclick="exportPNG()">PNG</button>
+                <button class="btn btn-neon" id="recordBtn" onclick="toggleRecording()">REC</button>
+            </div>
+            <div class="recording-indicator" id="recordingIndicator">
+                <div class="record-dot"></div>
+                <span id="recordTime">0:00</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <span>Rot: <span id="rotation">0°</span></span>
+            <span id="fps">60 FPS</span>
+            <span>History: <span id="historyCount">0/0</span></span>
+        </div>
+    </div>
+
+    <canvas id="drawCanvas" width="600" height="600" style="display:none"></canvas>
+    <canvas id="exportCanvas" width="600" height="600" style="display:none"></canvas>
+
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const staticCanvas = document.getElementById('staticCanvas');
+        const staticCtx = staticCanvas.getContext('2d');
+        const spinningCanvas = document.getElementById('spinningCanvas');
+        const spinningCtx = spinningCanvas.getContext('2d');
+        const drawCanvas = document.getElementById('drawCanvas');
+        const drawCtx = drawCanvas.getContext('2d');
+        const staticParticles = document.getElementById('staticParticles');
+        const staticParticlesCtx = staticParticles.getContext('2d');
+        const spinningParticles = document.getElementById('spinningParticles');
+        const spinningParticlesCtx = spinningParticles.getContext('2d');
+        const exportCanvas = document.getElementById('exportCanvas');
+        const exportCtx = exportCanvas.getContext('2d');
+
+        const CANVAS_SIZE = 600;
+        const SNAP_THRESHOLD = 20;
+        const MAX_HISTORY = 50;
+
+        // History for undo/redo
+        let history = [];
+        let historyIndex = -1;
 
         // State
-        let state = {
-            angle: 0,
-            rpm: 0,
-            targetRPM: 0,
-            wobbleAngle: 0,
-            precessionAngle: 0,
-            isSpinning: false,
-            spinStartTime: 0,
-            lastTime: 0
-        };
+        let angle = 0, rpm = 0, targetRpm = 0, friction = 0.5;
+        let lastTime = 0, frameCount = 0, lastFpsTime = 0;
+        let canvasScale = 1;
 
-        // Settings
-        let settings = {
-            speed: 50,
-            friction: 0.995,
-            wobble: 0.3,
-            precession: 0.5,
-            shape: 'classic',
-            pattern: 'spiral',
-            segments: 8,
-            size: 100,
-            color1: '#ff6b6b',
-            color2: '#48dbfb',
-            color3: '#feca57'
-        };
+        // Drawing
+        let currentTool = 'pencil', isDrawing = false, activeCanvas = null;
+        let lastX = 0, lastY = 0, startX = 0, startY = 0;
+        let currentColor = '#ffffff', brushSize = 8, opacity = 1, symmetry = 'none';
+        let rainbowMode = false, rainbowHue = 0;
 
-        // Presets
-        const presets = {
-            classic: {
-                shape: 'classic', pattern: 'segments', segments: 6,
-                color1: '#e74c3c', color2: '#f1c40f', color3: '#3498db',
-                wobble: 30, precession: 50, friction: 995
-            },
-            hypnotic: {
-                shape: 'flat', pattern: 'spiral', segments: 12,
-                color1: '#9b59b6', color2: '#1abc9c', color3: '#e74c3c',
-                wobble: 10, precession: 80, friction: 998
-            },
-            rainbow: {
-                shape: 'tiered', pattern: 'segments', segments: 12,
-                color1: '#ff6b6b', color2: '#48dbfb', color3: '#feca57',
-                wobble: 40, precession: 60, friction: 993
-            },
-            minimal: {
-                shape: 'cone', pattern: 'rings', segments: 4,
-                color1: '#2c3e50', color2: '#ecf0f1', color3: '#95a5a6',
-                wobble: 20, precession: 30, friction: 997
+        // Effects
+        let glowEnabled = true, glowIntensity = 20;
+        let particlesEnabled = true;
+        let particles = [];
+
+        // Recording
+        let isRecording = false, recordedFrames = [], recordStartTime = 0;
+
+        // Preview canvas
+        let previewCanvas = document.createElement('canvas');
+        previewCanvas.width = previewCanvas.height = CANVAS_SIZE;
+        let previewCtx = previewCanvas.getContext('2d');
+
+        // Particle system - toroidal flow
+        class Particle {
+            constructor() {
+                this.reset();
             }
-        };
 
-        function loadPreset(name) {
-            const p = presets[name];
-            document.getElementById('shape').value = p.shape;
-            document.getElementById('pattern').value = p.pattern;
-            document.getElementById('segments').value = p.segments;
-            document.getElementById('color1').value = p.color1;
-            document.getElementById('color2').value = p.color2;
-            document.getElementById('color3').value = p.color3;
-            document.getElementById('wobble').value = p.wobble;
-            document.getElementById('precession').value = p.precession;
-            document.getElementById('friction').value = p.friction;
-            updateSettings();
+            reset() {
+                const a = Math.random() * Math.PI * 2;
+                this.angle = a;
+                this.radius = Math.random() * 30 + 10;
+                this.speed = Math.random() * 2 + 1;
+                this.size = Math.random() * 3 + 1;
+                this.hue = Math.random() * 360;
+                this.alpha = Math.random() * 0.5 + 0.3;
+                this.z = Math.random(); // depth for 3D effect
+            }
+
+            update(dt) {
+                // Toroidal motion: spiral outward then reset
+                this.radius += this.speed * dt * 60;
+                this.angle += (0.02 + (rpm / 1000)) * dt * 60;
+                this.hue = (this.hue + 1) % 360;
+
+                // Fade out as approaching edge
+                const maxRadius = CANVAS_SIZE / 2 - 20;
+                if (this.radius > maxRadius * 0.7) {
+                    this.alpha = Math.max(0, this.alpha - 0.02);
+                }
+
+                if (this.radius > maxRadius || this.alpha <= 0) {
+                    this.reset();
+                }
+            }
+
+            draw(ctx, centerX, centerY, rotationAngle = 0) {
+                const x = centerX + Math.cos(this.angle + rotationAngle) * this.radius;
+                const y = centerY + Math.sin(this.angle + rotationAngle) * this.radius;
+
+                ctx.beginPath();
+                ctx.arc(x, y, this.size * (0.5 + this.z * 0.5), 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.alpha})`;
+                ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
         }
 
-        // Update settings from controls
-        function updateSettings() {
-            settings.speed = parseInt(document.getElementById('speed').value);
-            settings.friction = parseInt(document.getElementById('friction').value) / 1000;
-            settings.wobble = parseInt(document.getElementById('wobble').value) / 100;
-            settings.precession = parseInt(document.getElementById('precession').value) / 100;
-            settings.shape = document.getElementById('shape').value;
-            settings.pattern = document.getElementById('pattern').value;
-            settings.segments = parseInt(document.getElementById('segments').value);
-            settings.size = parseInt(document.getElementById('size').value);
-            settings.color1 = document.getElementById('color1').value;
-            settings.color2 = document.getElementById('color2').value;
-            settings.color3 = document.getElementById('color3').value;
-
-            // Update display values
-            document.getElementById('speedValue').textContent = settings.speed;
-            document.getElementById('frictionValue').textContent = settings.friction.toFixed(3);
-            document.getElementById('wobbleValue').textContent = settings.wobble.toFixed(2);
-            document.getElementById('precessionValue').textContent = settings.precession.toFixed(2);
-            document.getElementById('segmentsValue').textContent = settings.segments;
-            document.getElementById('sizeValue').textContent = settings.size;
+        // Initialize particles
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
         }
 
-        // Attach event listeners to all controls
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', updateSettings);
+        // Colors - neon palette
+        const colors = [
+            '#ffffff','#ff00ff','#00ffff','#ff0080','#00ff80','#8000ff','#ff8000','#80ff00',
+            '#ff0000','#ff4400','#ffff00','#00ff00','#00ff88','#0088ff','#0000ff','#4400ff',
+            '#ff00aa','#aa00ff','#ff6600','#ffcc00','#ccff00','#00ffcc','#00ccff','#cc00ff'
+        ];
+
+        const paletteEl = document.getElementById('palette');
+        colors.forEach((c, i) => {
+            const div = document.createElement('div');
+            div.className = 'color-swatch' + (i === 0 ? ' selected' : '');
+            div.style.background = c;
+            div.style.boxShadow = `0 0 8px ${c}40`;
+            div.onclick = () => {
+                currentColor = c;
+                document.getElementById('colorPicker').value = c;
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                div.classList.add('selected');
+            };
+            paletteEl.appendChild(div);
         });
 
-        function spin() {
-            state.targetRPM = settings.speed;
-            state.isSpinning = true;
-            if (state.spinStartTime === 0) {
-                state.spinStartTime = Date.now();
+        document.getElementById('colorPicker').addEventListener('input', e => {
+            currentColor = e.target.value;
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        });
+
+        // Tools
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+            });
+        });
+
+        // Sliders
+        document.getElementById('speed').addEventListener('input', e => {
+            let v = parseInt(e.target.value);
+            if (Math.abs(v) <= SNAP_THRESHOLD) { v = 0; e.target.value = 0; }
+            rpm = targetRpm = v;
+            document.getElementById('speedValue').textContent = v;
+        });
+
+        document.getElementById('friction').addEventListener('input', e => {
+            friction = parseInt(e.target.value) / 100;
+            document.getElementById('frictionValue').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('brushSize').addEventListener('input', e => {
+            brushSize = parseInt(e.target.value);
+            document.getElementById('brushSizeValue').textContent = brushSize;
+        });
+
+        document.getElementById('opacity').addEventListener('input', e => {
+            opacity = parseInt(e.target.value) / 100;
+            document.getElementById('opacityValue').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('glowIntensity').addEventListener('input', e => {
+            glowIntensity = parseInt(e.target.value);
+            document.getElementById('glowValue').textContent = glowIntensity;
+        });
+
+        document.getElementById('symmetry').addEventListener('change', e => symmetry = e.target.value);
+
+        function setSpeed(v) {
+            rpm = targetRpm = v;
+            updateSpeedDisplay();
+        }
+
+        function spinIt() {
+            rpm = (Math.random() > 0.5 ? 1 : -1) * (300 + Math.random() * 200);
+            targetRpm = 0;
+            updateSpeedDisplay();
+        }
+
+        function stopSpin() {
+            rpm = targetRpm = 0;
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            document.getElementById('speed').value = Math.round(rpm);
+            document.getElementById('speedValue').textContent = Math.round(rpm);
+        }
+
+        function toggleRainbow() {
+            rainbowMode = !rainbowMode;
+            document.getElementById('rainbowToggle').classList.toggle('active', rainbowMode);
+        }
+
+        function toggleGlow() {
+            glowEnabled = !glowEnabled;
+            document.getElementById('glowToggle').classList.toggle('active', glowEnabled);
+        }
+
+        function toggleParticles() {
+            particlesEnabled = !particlesEnabled;
+            document.getElementById('particleToggle').classList.toggle('active', particlesEnabled);
+        }
+
+        // History
+        function saveState() {
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            const imgData = drawCtx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            history.push(imgData);
+            if (history.length > MAX_HISTORY) history.shift();
+            historyIndex = history.length - 1;
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                drawCtx.putImageData(history[historyIndex], 0, 0);
+                updateHistoryButtons();
             }
         }
 
-        function stop() {
-            state.targetRPM = 0;
-        }
-
-        function reset() {
-            state.angle = 0;
-            state.rpm = 0;
-            state.targetRPM = 0;
-            state.wobbleAngle = 0;
-            state.precessionAngle = 0;
-            state.isSpinning = false;
-            state.spinStartTime = 0;
-        }
-
-        function drawTop(tiltX, tiltY) {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const radius = settings.size;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-
-            // Apply perspective tilt
-            ctx.transform(1, tiltY * 0.3, tiltX * 0.3, 1, 0, 0);
-
-            // Draw shadow
-            ctx.save();
-            ctx.scale(1, 0.3);
-            ctx.beginPath();
-            ctx.arc(tiltX * 30, 150 + Math.abs(tiltX * 20), radius * 0.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.fill();
-            ctx.restore();
-
-            // Draw the top based on shape
-            switch(settings.shape) {
-                case 'classic':
-                    drawClassicTop(radius);
-                    break;
-                case 'flat':
-                    drawFlatTop(radius);
-                    break;
-                case 'cone':
-                    drawConeTop(radius);
-                    break;
-                case 'tiered':
-                    drawTieredTop(radius);
-                    break;
-                case 'mushroom':
-                    drawMushroomTop(radius);
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        function drawClassicTop(radius) {
-            // Main disc
-            drawDisc(0, 0, radius, 0.4);
-
-            // Upper dome
-            ctx.save();
-            ctx.scale(1, 0.5);
-            ctx.beginPath();
-            ctx.arc(0, -radius * 0.4, radius * 0.6, Math.PI, 0);
-            const grad = ctx.createRadialGradient(0, -radius * 0.4, 0, 0, -radius * 0.4, radius * 0.6);
-            grad.addColorStop(0, settings.color3);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.restore();
-
-            // Handle
-            ctx.beginPath();
-            ctx.moveTo(-8, -radius * 0.3);
-            ctx.lineTo(-5, -radius * 0.8);
-            ctx.lineTo(5, -radius * 0.8);
-            ctx.lineTo(8, -radius * 0.3);
-            ctx.fillStyle = '#8B4513';
-            ctx.fill();
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-6, radius * 0.2);
-            ctx.lineTo(0, radius * 0.7);
-            ctx.lineTo(6, radius * 0.2);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
-        }
-
-        function drawFlatTop(radius) {
-            drawDisc(0, 0, radius, 0.15);
-
-            // Center bump
-            ctx.save();
-            ctx.scale(1, 0.3);
-            ctx.beginPath();
-            ctx.arc(0, 0, radius * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color3;
-            ctx.fill();
-            ctx.restore();
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-4, radius * 0.08);
-            ctx.lineTo(0, radius * 0.4);
-            ctx.lineTo(4, radius * 0.08);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
-        }
-
-        function drawConeTop(radius) {
-            // Cone body
-            ctx.beginPath();
-            ctx.moveTo(-radius, 0);
-            ctx.lineTo(0, radius * 0.8);
-            ctx.lineTo(radius, 0);
-            ctx.closePath();
-
-            const grad = ctx.createLinearGradient(-radius, 0, radius, 0);
-            grad.addColorStop(0, settings.color1);
-            grad.addColorStop(0.5, settings.color2);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Top disc
-            drawDisc(0, 0, radius, 0.2);
-        }
-
-        function drawTieredTop(radius) {
-            // Bottom tier
-            drawDisc(0, radius * 0.2, radius, 0.2);
-            // Middle tier
-            drawDisc(0, 0, radius * 0.7, 0.2);
-            // Top tier
-            drawDisc(0, -radius * 0.2, radius * 0.4, 0.2);
-
-            // Tip
-            ctx.beginPath();
-            ctx.moveTo(-4, radius * 0.3);
-            ctx.lineTo(0, radius * 0.6);
-            ctx.lineTo(4, radius * 0.3);
-            ctx.fillStyle = '#C0C0C0';
-            ctx.fill();
-        }
-
-        function drawMushroomTop(radius) {
-            // Stem
-            ctx.beginPath();
-            ctx.moveTo(-radius * 0.2, 0);
-            ctx.lineTo(-radius * 0.15, radius * 0.5);
-            ctx.lineTo(radius * 0.15, radius * 0.5);
-            ctx.lineTo(radius * 0.2, 0);
-            ctx.fillStyle = '#DEB887';
-            ctx.fill();
-
-            // Cap
-            ctx.save();
-            ctx.scale(1, 0.4);
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, Math.PI, 0);
-            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            grad.addColorStop(0, settings.color2);
-            grad.addColorStop(1, settings.color1);
-            ctx.fillStyle = grad;
-            ctx.fill();
-            ctx.restore();
-
-            // Top pattern
-            drawDiscPattern(0, 0, radius, 0.4);
-        }
-
-        function drawDisc(x, y, radius, thickness) {
-            ctx.save();
-            ctx.translate(x, y);
-
-            // Draw ellipse (top view of disc)
-            ctx.save();
-            ctx.scale(1, thickness);
-
-            // Pattern on disc
-            drawDiscPattern(0, 0, radius, 1);
-
-            // Rim highlight
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.restore();
-            ctx.restore();
-        }
-
-        function drawDiscPattern(x, y, radius, scaleY) {
-            ctx.save();
-            ctx.translate(x, y);
-
-            switch(settings.pattern) {
-                case 'spiral':
-                    drawSpiral(radius);
-                    break;
-                case 'segments':
-                    drawSegments(radius);
-                    break;
-                case 'rings':
-                    drawRings(radius);
-                    break;
-                case 'dots':
-                    drawDots(radius);
-                    break;
-                case 'stripes':
-                    drawStripes(radius);
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        function drawSpiral(radius) {
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color1;
-            ctx.fill();
-
-            ctx.save();
-            ctx.rotate(state.angle);
-
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                const colors = [settings.color2, settings.color3, settings.color1];
-                for (let a = 0; a < Math.PI * 6; a += 0.1) {
-                    const r = (a / (Math.PI * 6)) * radius;
-                    const x = Math.cos(a + i * Math.PI * 2/3) * r;
-                    const y = Math.sin(a + i * Math.PI * 2/3) * r;
-                    if (a === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = colors[i];
-                ctx.lineWidth = radius * 0.15;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-
-        function drawSegments(radius) {
-            ctx.save();
-            ctx.rotate(state.angle);
-
-            const colors = [settings.color1, settings.color2, settings.color3];
-            for (let i = 0; i < settings.segments; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.arc(0, 0, radius, (i / settings.segments) * Math.PI * 2,
-                       ((i + 1) / settings.segments) * Math.PI * 2);
-                ctx.closePath();
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function drawRings(radius) {
-            const colors = [settings.color1, settings.color2, settings.color3];
-            const ringCount = 5;
-
-            for (let i = ringCount; i > 0; i--) {
-                ctx.beginPath();
-                ctx.arc(0, 0, (i / ringCount) * radius, 0, Math.PI * 2);
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                drawCtx.putImageData(history[historyIndex], 0, 0);
+                updateHistoryButtons();
             }
         }
 
-        function drawDots(radius) {
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.fillStyle = settings.color1;
-            ctx.fill();
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+            document.getElementById('historyCount').textContent = `${historyIndex + 1}/${history.length}`;
+        }
 
-            ctx.save();
-            ctx.rotate(state.angle);
+        // Resize - larger for desktop
+        function resizeCanvases() {
+            const container = document.querySelector('.canvas-area');
+            const isVertical = container.offsetWidth < 700;
+            let w, h;
+            if (isVertical) {
+                w = container.clientWidth - 16;
+                h = (container.clientHeight - 24) / 2;
+            } else {
+                w = (container.clientWidth - 40) / 2;
+                h = container.clientHeight - 20;
+            }
 
-            const colors = [settings.color2, settings.color3];
-            for (let ring = 1; ring <= 3; ring++) {
-                const r = (ring / 4) * radius;
-                const dotCount = ring * 4;
-                for (let i = 0; i < dotCount; i++) {
-                    const angle = (i / dotCount) * Math.PI * 2;
-                    ctx.beginPath();
-                    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, radius * 0.08, 0, Math.PI * 2);
-                    ctx.fillStyle = colors[(ring + i) % colors.length];
-                    ctx.fill();
+            // Larger canvas for desktop
+            let maxSize = 350;
+            if (window.innerWidth >= 1200) maxSize = 450;
+            if (window.innerWidth >= 1600) maxSize = 550;
+
+            const size = Math.min(w, h, maxSize);
+
+            [staticCanvas, spinningCanvas, staticParticles, spinningParticles].forEach(c => {
+                c.style.width = c.style.height = size + 'px';
+            });
+
+            canvasScale = CANVAS_SIZE / size;
+        }
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+
+        function getDrawCoords(e, canvas, rotate = false) {
+            const rect = canvas.getBoundingClientRect();
+            let x = (e.clientX - rect.left) * canvasScale;
+            let y = (e.clientY - rect.top) * canvasScale;
+            if (rotate) {
+                const cx = CANVAS_SIZE / 2, cy = CANVAS_SIZE / 2;
+                const dx = x - cx, dy = y - cy;
+                const cos = Math.cos(-angle), sin = Math.sin(-angle);
+                x = cx + dx * cos - dy * sin;
+                y = cy + dx * sin + dy * cos;
+            }
+            return { x, y };
+        }
+
+        function getSymmetryPoints(x, y) {
+            const cx = CANVAS_SIZE / 2, cy = CANVAS_SIZE / 2;
+            const dx = x - cx, dy = y - cy;
+            const pts = [{ x, y }];
+            if (symmetry === 'none') return pts;
+            if (symmetry === 'mirror-h') pts.push({ x: cx - dx, y });
+            else if (symmetry === 'mirror-v') pts.push({ x, y: cy - dy });
+            else if (symmetry === 'point') pts.push({ x: cx - dx, y: cy - dy });
+            else if (symmetry.startsWith('radial-')) {
+                const n = parseInt(symmetry.split('-')[1]);
+                for (let i = 1; i < n; i++) {
+                    const a = (i / n) * Math.PI * 2;
+                    pts.push({ x: cx + dx * Math.cos(a) - dy * Math.sin(a), y: cy + dx * Math.sin(a) + dy * Math.cos(a) });
                 }
             }
-            ctx.restore();
+            return pts;
         }
 
-        function drawStripes(radius) {
-            ctx.save();
-            ctx.rotate(state.angle);
+        function getCurrentColor() {
+            if (rainbowMode) {
+                rainbowHue = (rainbowHue + 2) % 360;
+                return `hsl(${rainbowHue}, 100%, 50%)`;
+            }
+            return currentColor;
+        }
+
+        function startDrawing(e, canvas) {
+            isDrawing = true;
+            activeCanvas = canvas;
+            const coords = getDrawCoords(e, canvas, canvas === spinningCanvas);
+            lastX = startX = coords.x;
+            lastY = startY = coords.y;
+            if (currentTool === 'fill') {
+                floodFill(Math.round(coords.x), Math.round(coords.y), getCurrentColor());
+                isDrawing = false;
+                saveState();
+            } else if (currentTool === 'pencil' || currentTool === 'eraser') {
+                drawDot(coords.x, coords.y);
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing || !activeCanvas) return;
+            const coords = getDrawCoords(e, activeCanvas, activeCanvas === spinningCanvas);
+            if (currentTool === 'pencil' || currentTool === 'eraser') {
+                drawLineSymmetric(lastX, lastY, coords.x, coords.y);
+                lastX = coords.x; lastY = coords.y;
+            } else if (['line', 'circle', 'rect'].includes(currentTool)) {
+                previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                previewCtx.drawImage(drawCanvas, 0, 0);
+                drawShapeSymmetric(previewCtx, startX, startY, coords.x, coords.y);
+            }
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            if (activeCanvas && ['line', 'circle', 'rect'].includes(currentTool)) {
+                const coords = getDrawCoords(e, activeCanvas, activeCanvas === spinningCanvas);
+                drawShapeSymmetric(drawCtx, startX, startY, coords.x, coords.y);
+                previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            }
+            if (isDrawing) saveState();
+            isDrawing = false;
+            activeCanvas = null;
+        }
+
+        function drawDot(x, y) {
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : getCurrentColor();
+            drawCtx.globalAlpha = opacity;
+            drawCtx.fillStyle = color;
+
+            if (glowEnabled && currentTool !== 'eraser') {
+                drawCtx.shadowColor = color;
+                drawCtx.shadowBlur = glowIntensity;
+            }
+
+            getSymmetryPoints(x, y).forEach(p => {
+                drawCtx.beginPath();
+                drawCtx.arc(p.x, p.y, brushSize / 2, 0, Math.PI * 2);
+                drawCtx.fill();
+            });
+
+            drawCtx.shadowBlur = 0;
+            drawCtx.globalAlpha = 1;
+        }
+
+        function drawLineSymmetric(x1, y1, x2, y2) {
+            const pts1 = getSymmetryPoints(x1, y1), pts2 = getSymmetryPoints(x2, y2);
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : getCurrentColor();
+            drawCtx.globalAlpha = opacity;
+            drawCtx.strokeStyle = color;
+            drawCtx.lineWidth = brushSize;
+            drawCtx.lineCap = drawCtx.lineJoin = 'round';
+
+            if (glowEnabled && currentTool !== 'eraser') {
+                drawCtx.shadowColor = color;
+                drawCtx.shadowBlur = glowIntensity;
+            }
+
+            for (let i = 0; i < pts1.length; i++) {
+                drawCtx.beginPath();
+                drawCtx.moveTo(pts1[i].x, pts1[i].y);
+                drawCtx.lineTo(pts2[i].x, pts2[i].y);
+                drawCtx.stroke();
+            }
+
+            drawCtx.shadowBlur = 0;
+            drawCtx.globalAlpha = 1;
+        }
+
+        function drawShapeSymmetric(ctx, x1, y1, x2, y2) {
+            const pts1 = getSymmetryPoints(x1, y1), pts2 = getSymmetryPoints(x2, y2);
+            const color = getCurrentColor();
+            ctx.globalAlpha = opacity;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+
+            if (glowEnabled) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = glowIntensity;
+            }
+
+            for (let i = 0; i < pts1.length; i++) {
+                const p1 = pts1[i], p2 = pts2[i];
+                ctx.beginPath();
+                if (currentTool === 'line') {
+                    ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                } else if (currentTool === 'circle') {
+                    ctx.arc(p1.x, p1.y, Math.hypot(p2.x - p1.x, p2.y - p1.y), 0, Math.PI * 2); ctx.stroke();
+                } else if (currentTool === 'rect') {
+                    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+                }
+            }
+
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+        }
+
+        function floodFill(sx, sy, fillColor) {
+            const img = drawCtx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            const d = img.data, idx = (sy * CANVAS_SIZE + sx) * 4;
+            const sR = d[idx], sG = d[idx + 1], sB = d[idx + 2];
+            const fill = parseColor(fillColor);
+            if (!fill || (sR === fill.r && sG === fill.g && sB === fill.b)) return;
+            const stack = [[sx, sy]], visited = new Set();
+            while (stack.length) {
+                const [x, y] = stack.pop(), key = `${x},${y}`;
+                if (visited.has(key) || x < 0 || x >= CANVAS_SIZE || y < 0 || y >= CANVAS_SIZE) continue;
+                const i = (y * CANVAS_SIZE + x) * 4;
+                if (Math.abs(d[i] - sR) > 10 || Math.abs(d[i + 1] - sG) > 10 || Math.abs(d[i + 2] - sB) > 10) continue;
+                visited.add(key);
+                d[i] = fill.r; d[i + 1] = fill.g; d[i + 2] = fill.b; d[i + 3] = 255;
+                stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+            }
+            drawCtx.putImageData(img, 0, 0);
+        }
+
+        function parseColor(color) {
+            // Handle hex
+            const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+            if (hexMatch) {
+                return { r: parseInt(hexMatch[1], 16), g: parseInt(hexMatch[2], 16), b: parseInt(hexMatch[3], 16) };
+            }
+            // Handle hsl
+            const hslMatch = /hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/.exec(color);
+            if (hslMatch) {
+                return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
+            }
+            return null;
+        }
+
+        function hslToRgb(h, s, l) {
+            s /= 100; l /= 100;
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+        }
+
+        [staticCanvas, spinningCanvas].forEach(c => {
+            c.addEventListener('mousedown', e => startDrawing(e, c));
+            c.addEventListener('touchstart', e => { e.preventDefault(); startDrawing({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }, c); }, { passive: false });
+        });
+
+        document.addEventListener('mousemove', draw);
+        document.addEventListener('mouseup', stopDrawing);
+        document.addEventListener('touchmove', e => { if (isDrawing) { e.preventDefault(); draw({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }); } }, { passive: false });
+        document.addEventListener('touchend', e => { if (isDrawing) { e.preventDefault(); stopDrawing(e.changedTouches[0] ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY } : {}); } }, { passive: false });
+
+        document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            const key = e.key.toLowerCase();
+            if (key === 'z' && (e.ctrlKey || e.metaKey)) { e.shiftKey ? redo() : undo(); e.preventDefault(); }
+            else if (key === 'y' && (e.ctrlKey || e.metaKey)) { redo(); e.preventDefault(); }
+            else if (key === ' ') { e.preventDefault(); Math.abs(rpm) < 10 ? spinIt() : stopSpin(); }
+            else if (key === 'p') document.querySelector('[data-tool="pencil"]').click();
+            else if (key === 'l') document.querySelector('[data-tool="line"]').click();
+            else if (key === 'c') document.querySelector('[data-tool="circle"]').click();
+            else if (key === 'r') document.querySelector('[data-tool="rect"]').click();
+            else if (key === 'f') document.querySelector('[data-tool="fill"]').click();
+            else if (key === 'e') document.querySelector('[data-tool="eraser"]').click();
+            else if (key === 'g') toggleGlow();
+            else if (key === 'n') toggleParticles();
+            else if (key === 'b') toggleRainbow();
+        });
+
+        function clearCanvas() {
+            drawCtx.fillStyle = document.getElementById('bgColor').value;
+            drawCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            saveState();
+        }
+
+        function loadImage(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+                    const w = img.width * scale, h = img.height * scale;
+                    drawCtx.drawImage(img, (CANVAS_SIZE - w) / 2, (CANVAS_SIZE - h) / 2, w, h);
+                    saveState();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('imageInput').addEventListener('change', e => { loadImage(e.target.files[0]); e.target.value = ''; });
+        document.getElementById('cameraInput').addEventListener('change', e => { loadImage(e.target.files[0]); e.target.value = ''; });
+
+        // Export functions
+        function exportPNG() {
+            // Combine spinning canvas view with particles
+            exportCtx.fillStyle = document.getElementById('bgColor').value;
+            exportCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+            exportCtx.save();
+            exportCtx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+            exportCtx.rotate(angle);
+            exportCtx.translate(-CANVAS_SIZE / 2, -CANVAS_SIZE / 2);
+            exportCtx.drawImage(drawCanvas, 0, 0);
+            exportCtx.restore();
 
             // Clip to circle
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.clip();
+            exportCtx.globalCompositeOperation = 'destination-in';
+            exportCtx.beginPath();
+            exportCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            exportCtx.fill();
+            exportCtx.globalCompositeOperation = 'source-over';
 
-            const colors = [settings.color1, settings.color2, settings.color3];
-            const stripeCount = settings.segments;
-
-            for (let i = 0; i < stripeCount; i++) {
-                const angle = (i / stripeCount) * Math.PI * 2;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(angle) * radius * 1.5, Math.sin(angle) * radius * 1.5);
-                ctx.lineTo(Math.cos(angle + Math.PI/stripeCount) * radius * 1.5,
-                          Math.sin(angle + Math.PI/stripeCount) * radius * 1.5);
-                ctx.closePath();
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fill();
-            }
-            ctx.restore();
+            const link = document.createElement('a');
+            link.download = `spin-art-${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
         }
 
-        function updateStats() {
-            document.getElementById('currentRPM').textContent = Math.round(state.rpm);
-            document.getElementById('rotation').textContent = Math.round((state.angle * 180 / Math.PI) % 360) + '°';
-            document.getElementById('tilt').textContent = (settings.wobble * Math.sin(state.wobbleAngle) * 10).toFixed(1) + '°';
+        let mediaRecorder, recordedChunks = [];
 
-            if (state.isSpinning && state.rpm > 0.1) {
-                const elapsed = (Date.now() - state.spinStartTime) / 1000;
-                document.getElementById('spinTime').textContent = elapsed.toFixed(1) + 's';
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
             }
         }
 
-        function animate(timestamp) {
-            if (!state.lastTime) state.lastTime = timestamp;
-            const deltaTime = (timestamp - state.lastTime) / 1000;
-            state.lastTime = timestamp;
+        function startRecording() {
+            recordedChunks = [];
+            const stream = spinningCanvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
 
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
 
-            // Update physics
-            if (state.isSpinning) {
-                // Accelerate towards target RPM
-                state.rpm += (state.targetRPM - state.rpm) * 0.1;
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `spin-art-${Date.now()}.webm`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordStartTime = Date.now();
+            document.getElementById('recordBtn').textContent = 'STOP';
+            document.getElementById('recordBtn').classList.add('btn-stop');
+            document.getElementById('recordBtn').classList.remove('btn-neon');
+            document.getElementById('recordingIndicator').classList.add('active');
+            updateRecordTime();
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            document.getElementById('recordBtn').textContent = 'REC';
+            document.getElementById('recordBtn').classList.remove('btn-stop');
+            document.getElementById('recordBtn').classList.add('btn-neon');
+            document.getElementById('recordingIndicator').classList.remove('active');
+        }
+
+        function updateRecordTime() {
+            if (!isRecording) return;
+            const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('recordTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            requestAnimationFrame(updateRecordTime);
+        }
+
+        // Init
+        clearCanvas();
+
+        function animate(ts) {
+            const dt = (ts - lastTime) / 1000;
+            lastTime = ts;
+
+            if (targetRpm === 0 && rpm !== 0) {
+                const f = friction * 200 * dt;
+                rpm = Math.abs(rpm) < f ? 0 : rpm - Math.sign(rpm) * f;
+                updateSpeedDisplay();
             }
 
-            // Apply friction
-            state.rpm *= settings.friction;
+            angle += (rpm / 60) * Math.PI * 2 * dt;
 
-            // Stop if very slow
-            if (state.rpm < 0.1 && state.targetRPM === 0) {
-                state.rpm = 0;
-                state.isSpinning = false;
+            // Update particles
+            if (particlesEnabled) {
+                particles.forEach(p => p.update(dt));
             }
 
-            // Update rotation
-            state.angle += (state.rpm / 60) * Math.PI * 2 * deltaTime;
+            const bgColor = document.getElementById('bgColor').value;
+            const cx = CANVAS_SIZE / 2, cy = CANVAS_SIZE / 2;
 
-            // Update wobble/precession
-            if (state.rpm > 0) {
-                state.wobbleAngle += deltaTime * 3;
-                state.precessionAngle += deltaTime * settings.precession * 2;
+            // Static canvas
+            staticCtx.fillStyle = bgColor;
+            staticCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            staticCtx.drawImage(isDrawing && activeCanvas === staticCanvas && ['line', 'circle', 'rect'].includes(currentTool) ? previewCanvas : drawCanvas, 0, 0);
+            staticCtx.globalCompositeOperation = 'destination-in';
+            staticCtx.beginPath();
+            staticCtx.arc(cx, cy, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            staticCtx.fill();
+            staticCtx.globalCompositeOperation = 'source-over';
+
+            // Spinning canvas
+            spinningCtx.fillStyle = bgColor;
+            spinningCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            spinningCtx.save();
+            spinningCtx.translate(cx, cy);
+            spinningCtx.rotate(angle);
+            spinningCtx.translate(-cx, -cy);
+            spinningCtx.drawImage(isDrawing && activeCanvas === spinningCanvas && ['line', 'circle', 'rect'].includes(currentTool) ? previewCanvas : drawCanvas, 0, 0);
+            spinningCtx.restore();
+            spinningCtx.globalCompositeOperation = 'destination-in';
+            spinningCtx.beginPath();
+            spinningCtx.arc(cx, cy, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            spinningCtx.fill();
+            spinningCtx.globalCompositeOperation = 'source-over';
+
+            // Draw particles
+            if (particlesEnabled) {
+                staticParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                spinningParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+                particles.forEach(p => {
+                    p.draw(staticParticlesCtx, cx, cy, 0);
+                    p.draw(spinningParticlesCtx, cx, cy, angle);
+                });
+            } else {
+                staticParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                spinningParticlesCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             }
 
-            // Calculate tilt based on wobble
-            const wobbleAmount = settings.wobble * Math.max(0, 1 - state.rpm / 100);
-            const tiltX = Math.sin(state.wobbleAngle) * wobbleAmount;
-            const tiltY = Math.cos(state.wobbleAngle + state.precessionAngle) * wobbleAmount;
+            document.getElementById('rotation').textContent = Math.round((angle * 180 / Math.PI) % 360) + '°';
 
-            // Draw
-            drawTop(tiltX, tiltY);
-            updateStats();
+            frameCount++;
+            if (ts - lastFpsTime > 1000) {
+                document.getElementById('fps').textContent = frameCount + ' FPS';
+                frameCount = 0;
+                lastFpsTime = ts;
+            }
 
             requestAnimationFrame(animate);
         }
 
-        // Initialize
-        updateSettings();
         requestAnimationFrame(animate);
     </script>
 </body>
