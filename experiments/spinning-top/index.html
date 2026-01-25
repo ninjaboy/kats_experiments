@@ -67,18 +67,39 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 20px;
             background: radial-gradient(circle, #252542 0%, #1a1a2e 100%);
             min-width: 0;
             padding: 10px;
         }
 
-        #displayCanvas {
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .canvas-label {
+            font-size: 0.75em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .drawing-canvas {
             border-radius: 50%;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5), 0 0 100px rgba(74, 111, 165, 0.2);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 60px rgba(74, 111, 165, 0.15);
             cursor: crosshair;
-            max-width: 100%;
-            max-height: 100%;
             touch-action: none;
+        }
+
+        #staticCanvas {
+            border: 2px solid #4a6fa5;
+        }
+
+        #spinningCanvas {
+            border: 2px solid #e74c3c;
         }
 
         .controls {
@@ -153,21 +174,19 @@
             text-align: right;
         }
 
-        /* Speed slider with zero marker */
-        .speed-slider-container {
-            position: relative;
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: #333;
+            color: #fff;
+            font-size: 0.9em;
+            cursor: pointer;
         }
 
-        .speed-slider-container::after {
-            content: '';
-            position: absolute;
-            left: calc(50% + 35px);
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 2px;
-            height: 14px;
-            background: #666;
-            pointer-events: none;
+        select option {
+            background: #252542;
         }
 
         .color-palette {
@@ -216,6 +235,12 @@
 
         .btn-stop {
             background: #e74c3c;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn-spin {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
             color: #fff;
             font-weight: bold;
         }
@@ -273,6 +298,13 @@
         }
 
         /* Mobile Layout */
+        @media (max-width: 1100px) {
+            .canvas-area {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
         @media (max-width: 900px) {
             body {
                 flex-direction: column;
@@ -286,12 +318,13 @@
                 border-right: none;
                 border-bottom: 1px solid #333;
                 order: 2;
+                flex-wrap: wrap;
             }
 
             .tool-btn {
-                width: 44px;
-                height: 44px;
-                font-size: 18px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
             }
 
             .separator {
@@ -304,6 +337,7 @@
                 order: 1;
                 flex: 1;
                 min-height: 0;
+                flex-direction: row;
             }
 
             .controls {
@@ -327,18 +361,22 @@
             .color-palette {
                 grid-template-columns: repeat(8, 1fr);
             }
+
+            .canvas-label {
+                display: none;
+            }
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
             .toolbar {
                 padding: 6px;
                 gap: 3px;
             }
 
             .tool-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
             }
 
             .controls {
@@ -379,6 +417,7 @@
                 border-right: 1px solid #333;
                 order: 1;
                 padding: 5px;
+                flex-wrap: nowrap;
             }
 
             .tool-btn {
@@ -394,6 +433,7 @@
 
             .canvas-area {
                 order: 2;
+                flex-direction: row;
             }
 
             .controls {
@@ -423,18 +463,49 @@
     </div>
 
     <div class="canvas-area">
-        <canvas id="displayCanvas" width="600" height="600"></canvas>
+        <div class="canvas-wrapper">
+            <span class="canvas-label">Static</span>
+            <canvas id="staticCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+            <span class="canvas-label">Spinning</span>
+            <canvas id="spinningCanvas" class="drawing-canvas" width="600" height="600"></canvas>
+        </div>
     </div>
 
     <div class="controls">
         <div class="control-group">
             <h2>Speed</h2>
-            <div class="slider-row speed-slider-container">
+            <div class="slider-row">
                 <label>RPM</label>
-                <input type="range" id="speed" min="-200" max="200" value="30">
-                <span id="speedValue">30</span>
+                <input type="range" id="speed" min="-500" max="500" value="0">
+                <span id="speedValue">0</span>
             </div>
-            <button class="btn btn-stop" onclick="stopSpin()">STOP</button>
+            <div class="btn-row">
+                <button class="btn btn-spin" onclick="spinIt()">SPIN!</button>
+                <button class="btn btn-stop" onclick="stopSpin()">STOP</button>
+            </div>
+            <div class="slider-row">
+                <label>Friction</label>
+                <input type="range" id="friction" min="0" max="100" value="50">
+                <span id="frictionValue">50%</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h2>Symmetry</h2>
+            <select id="symmetry">
+                <option value="none">None</option>
+                <option value="mirror-h">Mirror (Horizontal)</option>
+                <option value="mirror-v">Mirror (Vertical)</option>
+                <option value="point">Point (180°)</option>
+                <option value="radial-3">Radial 3</option>
+                <option value="radial-4">Radial 4</option>
+                <option value="radial-5">Radial 5</option>
+                <option value="radial-6">Radial 6</option>
+                <option value="radial-8">Radial 8</option>
+                <option value="radial-12">Radial 12</option>
+            </select>
         </div>
 
         <div class="control-group">
@@ -487,8 +558,7 @@
             <kbd>E</kbd> Eraser<br>
             <kbd>C</kbd> Circle
             <kbd>R</kbd> Rectangle<br>
-            <kbd>[</kbd> <kbd>]</kbd> Brush size
-            <kbd>Space</kbd> Stop
+            <kbd>Space</kbd> Spin/Stop
         </div>
     </div>
 
@@ -496,26 +566,32 @@
     <canvas id="drawCanvas" width="600" height="600" style="display:none;"></canvas>
 
     <script>
-        const displayCanvas = document.getElementById('displayCanvas');
-        const displayCtx = displayCanvas.getContext('2d');
+        const staticCanvas = document.getElementById('staticCanvas');
+        const staticCtx = staticCanvas.getContext('2d');
+        const spinningCanvas = document.getElementById('spinningCanvas');
+        const spinningCtx = spinningCanvas.getContext('2d');
         const drawCanvas = document.getElementById('drawCanvas');
         const drawCtx = drawCanvas.getContext('2d');
 
         // Constants
         const CANVAS_SIZE = 600;
-        const SNAP_THRESHOLD = 15; // Snap to zero when within this range
+        const SNAP_THRESHOLD = 20;
 
         // State
         let angle = 0;
-        let rpm = 30;
+        let rpm = 0;
+        let targetRpm = 0;
+        let friction = 0.5;
         let lastTime = 0;
         let frameCount = 0;
         let lastFpsTime = 0;
-        let canvasScale = 1;
+        let staticCanvasScale = 1;
+        let spinningCanvasScale = 1;
 
         // Drawing state
         let currentTool = 'pencil';
         let isDrawing = false;
+        let activeCanvas = null;
         let lastX = 0;
         let lastY = 0;
         let startX = 0;
@@ -523,6 +599,7 @@
         let currentColor = '#ffffff';
         let brushSize = 8;
         let opacity = 1;
+        let symmetry = 'none';
 
         // For shape preview
         let previewCanvas = document.createElement('canvas');
@@ -573,22 +650,44 @@
         const speedSlider = document.getElementById('speed');
         speedSlider.addEventListener('input', (e) => {
             let value = parseInt(e.target.value);
-
-            // Snap to zero when close
             if (Math.abs(value) <= SNAP_THRESHOLD) {
                 value = 0;
                 e.target.value = 0;
             }
-
+            targetRpm = value;
             rpm = value;
-            document.getElementById('speedValue').textContent = rpm;
+            document.getElementById('speedValue').textContent = value;
         });
+
+        // Friction slider
+        document.getElementById('friction').addEventListener('input', (e) => {
+            friction = parseInt(e.target.value) / 100;
+            document.getElementById('frictionValue').textContent = e.target.value + '%';
+        });
+
+        // Symmetry selector
+        document.getElementById('symmetry').addEventListener('change', (e) => {
+            symmetry = e.target.value;
+        });
+
+        // Spin button - give it a push
+        function spinIt() {
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            rpm = direction * (300 + Math.random() * 200);
+            targetRpm = 0; // Will decelerate
+            updateSpeedDisplay();
+        }
 
         // Stop button
         function stopSpin() {
             rpm = 0;
-            document.getElementById('speed').value = 0;
-            document.getElementById('speedValue').textContent = '0';
+            targetRpm = 0;
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            document.getElementById('speed').value = Math.round(rpm);
+            document.getElementById('speedValue').textContent = Math.round(rpm);
         }
 
         document.getElementById('brushSize').addEventListener('input', (e) => {
@@ -602,45 +701,96 @@
         });
 
         // Resize handler
-        function resizeCanvas() {
+        function resizeCanvases() {
             const container = document.querySelector('.canvas-area');
-            const size = Math.min(container.clientWidth - 20, container.clientHeight - 20);
+            const isVertical = container.offsetWidth < 700;
 
-            displayCanvas.style.width = size + 'px';
-            displayCanvas.style.height = size + 'px';
+            let availableWidth, availableHeight;
+            if (isVertical) {
+                availableWidth = container.clientWidth - 20;
+                availableHeight = (container.clientHeight - 40) / 2;
+            } else {
+                availableWidth = (container.clientWidth - 40) / 2;
+                availableHeight = container.clientHeight - 40;
+            }
 
-            canvasScale = CANVAS_SIZE / size;
+            const size = Math.min(availableWidth, availableHeight, 400);
+
+            staticCanvas.style.width = size + 'px';
+            staticCanvas.style.height = size + 'px';
+            spinningCanvas.style.width = size + 'px';
+            spinningCanvas.style.height = size + 'px';
+
+            staticCanvasScale = CANVAS_SIZE / size;
+            spinningCanvasScale = CANVAS_SIZE / size;
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
 
-        // Transform mouse/touch coordinates to drawing canvas coordinates
-        function getDrawCoords(e) {
-            const rect = displayCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * canvasScale;
-            const y = (e.clientY - rect.top) * canvasScale;
+        // Get coordinates accounting for canvas scale and rotation
+        function getDrawCoords(e, canvas, applyRotation = false) {
+            const rect = canvas.getBoundingClientRect();
+            const scale = canvas === staticCanvas ? staticCanvasScale : spinningCanvasScale;
+            const x = (e.clientX - rect.left) * scale;
+            const y = (e.clientY - rect.top) * scale;
 
-            // Center of canvas
+            if (applyRotation) {
+                const cx = CANVAS_SIZE / 2;
+                const cy = CANVAS_SIZE / 2;
+                const dx = x - cx;
+                const dy = y - cy;
+                const cos = Math.cos(-angle);
+                const sin = Math.sin(-angle);
+                return {
+                    x: cx + dx * cos - dy * sin,
+                    y: cy + dx * sin + dy * cos
+                };
+            }
+
+            return { x, y };
+        }
+
+        // Get symmetry points
+        function getSymmetryPoints(x, y) {
             const cx = CANVAS_SIZE / 2;
             const cy = CANVAS_SIZE / 2;
-
-            // Translate to center, rotate back, translate back
             const dx = x - cx;
             const dy = y - cy;
-            const cos = Math.cos(-angle);
-            const sin = Math.sin(-angle);
+            const points = [{ x, y }];
 
-            return {
-                x: cx + dx * cos - dy * sin,
-                y: cy + dx * sin + dy * cos
-            };
+            if (symmetry === 'none') {
+                return points;
+            }
+
+            if (symmetry === 'mirror-h') {
+                points.push({ x: cx - dx, y });
+            } else if (symmetry === 'mirror-v') {
+                points.push({ x, y: cy - dy });
+            } else if (symmetry === 'point') {
+                points.push({ x: cx - dx, y: cy - dy });
+            } else if (symmetry.startsWith('radial-')) {
+                const n = parseInt(symmetry.split('-')[1]);
+                for (let i = 1; i < n; i++) {
+                    const angle = (i / n) * Math.PI * 2;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    points.push({
+                        x: cx + dx * cos - dy * sin,
+                        y: cy + dx * sin + dy * cos
+                    });
+                }
+            }
+
+            return points;
         }
 
         // Drawing functions
-        function startDrawing(e) {
+        function startDrawing(e, canvas) {
             isDrawing = true;
-            const coords = getDrawCoords(e);
+            activeCanvas = canvas;
+            const applyRotation = canvas === spinningCanvas;
+            const coords = getDrawCoords(e, canvas, applyRotation);
             lastX = coords.x;
             lastY = coords.y;
             startX = coords.x;
@@ -655,75 +805,100 @@
         }
 
         function draw(e) {
-            if (!isDrawing) return;
+            if (!isDrawing || !activeCanvas) return;
 
-            const coords = getDrawCoords(e);
+            const applyRotation = activeCanvas === spinningCanvas;
+            const coords = getDrawCoords(e, activeCanvas, applyRotation);
 
             if (currentTool === 'pencil' || currentTool === 'eraser') {
-                drawLine(lastX, lastY, coords.x, coords.y);
+                drawLineWithSymmetry(lastX, lastY, coords.x, coords.y);
                 lastX = coords.x;
                 lastY = coords.y;
             } else if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect') {
-                // Preview on separate canvas
                 previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
                 previewCtx.drawImage(drawCanvas, 0, 0);
-                drawShape(previewCtx, startX, startY, coords.x, coords.y);
+                drawShapeWithSymmetry(previewCtx, startX, startY, coords.x, coords.y);
             }
         }
 
         function stopDrawing(e) {
             if (!isDrawing) return;
 
-            if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect') {
-                const coords = getDrawCoords(e);
-                drawShape(drawCtx, startX, startY, coords.x, coords.y);
+            if (activeCanvas && (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect')) {
+                const applyRotation = activeCanvas === spinningCanvas;
+                const coords = getDrawCoords(e, activeCanvas, applyRotation);
+                drawShapeWithSymmetry(drawCtx, startX, startY, coords.x, coords.y);
                 previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             }
 
             isDrawing = false;
+            activeCanvas = null;
         }
 
         function drawDot(x, y) {
+            const points = getSymmetryPoints(x, y);
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+
             drawCtx.globalAlpha = opacity;
-            drawCtx.fillStyle = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
-            drawCtx.beginPath();
-            drawCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-            drawCtx.fill();
+            drawCtx.fillStyle = color;
+
+            points.forEach(p => {
+                drawCtx.beginPath();
+                drawCtx.arc(p.x, p.y, brushSize / 2, 0, Math.PI * 2);
+                drawCtx.fill();
+            });
+
             drawCtx.globalAlpha = 1;
         }
 
-        function drawLine(x1, y1, x2, y2) {
+        function drawLineWithSymmetry(x1, y1, x2, y2) {
+            const points1 = getSymmetryPoints(x1, y1);
+            const points2 = getSymmetryPoints(x2, y2);
+            const color = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+
             drawCtx.globalAlpha = opacity;
-            drawCtx.strokeStyle = currentTool === 'eraser' ? document.getElementById('bgColor').value : currentColor;
+            drawCtx.strokeStyle = color;
             drawCtx.lineWidth = brushSize;
             drawCtx.lineCap = 'round';
             drawCtx.lineJoin = 'round';
-            drawCtx.beginPath();
-            drawCtx.moveTo(x1, y1);
-            drawCtx.lineTo(x2, y2);
-            drawCtx.stroke();
+
+            for (let i = 0; i < points1.length; i++) {
+                drawCtx.beginPath();
+                drawCtx.moveTo(points1[i].x, points1[i].y);
+                drawCtx.lineTo(points2[i].x, points2[i].y);
+                drawCtx.stroke();
+            }
+
             drawCtx.globalAlpha = 1;
         }
 
-        function drawShape(ctx, x1, y1, x2, y2) {
+        function drawShapeWithSymmetry(ctx, x1, y1, x2, y2) {
+            const points1 = getSymmetryPoints(x1, y1);
+            const points2 = getSymmetryPoints(x2, y2);
+
             ctx.globalAlpha = opacity;
             ctx.strokeStyle = currentColor;
             ctx.fillStyle = currentColor;
             ctx.lineWidth = brushSize;
             ctx.lineCap = 'round';
 
-            if (currentTool === 'line') {
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            } else if (currentTool === 'circle') {
-                const radius = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-                ctx.beginPath();
-                ctx.arc(x1, y1, radius, 0, Math.PI * 2);
-                ctx.stroke();
-            } else if (currentTool === 'rect') {
-                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            for (let i = 0; i < points1.length; i++) {
+                const p1 = points1[i];
+                const p2 = points2[i];
+
+                if (currentTool === 'line') {
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                } else if (currentTool === 'circle') {
+                    const radius = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+                    ctx.beginPath();
+                    ctx.arc(p1.x, p1.y, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (currentTool === 'rect') {
+                    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+                }
             }
 
             ctx.globalAlpha = 1;
@@ -739,11 +914,9 @@
             const startG = data[startIdx + 1];
             const startB = data[startIdx + 2];
 
-            // Parse fill color
             const fill = hexToRgb(fillColor);
             if (!fill) return;
 
-            // Don't fill if same color
             if (startR === fill.r && startG === fill.g && startB === fill.b) return;
 
             const stack = [[startX, startY]];
@@ -758,7 +931,6 @@
 
                 const idx = (y * CANVAS_SIZE + x) * 4;
 
-                // Check if this pixel matches start color (with tolerance)
                 if (Math.abs(data[idx] - startR) > 10 ||
                     Math.abs(data[idx + 1] - startG) > 10 ||
                     Math.abs(data[idx + 2] - startB) > 10) {
@@ -767,13 +939,11 @@
 
                 visited.add(key);
 
-                // Fill this pixel
                 data[idx] = fill.r;
                 data[idx + 1] = fill.g;
                 data[idx + 2] = fill.b;
                 data[idx + 3] = 255;
 
-                // Add neighbors
                 stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
             }
 
@@ -789,38 +959,41 @@
             } : null;
         }
 
-        // Canvas event listeners
-        displayCanvas.addEventListener('mousedown', startDrawing);
-        displayCanvas.addEventListener('mousemove', draw);
-        displayCanvas.addEventListener('mouseup', stopDrawing);
-        displayCanvas.addEventListener('mouseleave', stopDrawing);
+        // Event listeners for both canvases
+        [staticCanvas, spinningCanvas].forEach(canvas => {
+            canvas.addEventListener('mousedown', (e) => startDrawing(e, canvas));
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                startDrawing({ clientX: touch.clientX, clientY: touch.clientY }, canvas);
+            }, { passive: false });
+        });
 
-        // Touch support
-        displayCanvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
+        document.addEventListener('mousemove', draw);
+        document.addEventListener('mouseup', stopDrawing);
 
-        displayCanvas.addEventListener('touchmove', (e) => {
+        document.addEventListener('touchmove', (e) => {
+            if (!isDrawing) return;
             e.preventDefault();
             const touch = e.touches[0];
             draw({ clientX: touch.clientX, clientY: touch.clientY });
         }, { passive: false });
 
-        displayCanvas.addEventListener('touchend', (e) => {
+        document.addEventListener('touchend', (e) => {
+            if (!isDrawing) return;
             e.preventDefault();
             if (e.changedTouches.length > 0) {
                 const touch = e.changedTouches[0];
                 stopDrawing({ clientX: touch.clientX, clientY: touch.clientY });
             } else {
                 isDrawing = false;
+                activeCanvas = null;
             }
         }, { passive: false });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
             switch(e.key.toLowerCase()) {
                 case 'p': selectTool('pencil'); break;
@@ -841,7 +1014,11 @@
                     break;
                 case ' ':
                     e.preventDefault();
-                    stopSpin();
+                    if (Math.abs(rpm) < 10) {
+                        spinIt();
+                    } else {
+                        stopSpin();
+                    }
                     break;
             }
         });
@@ -866,7 +1043,7 @@
             drawCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
         }
 
-        // Initialize with background
+        // Initialize
         clearCanvas();
 
         // Image loading
@@ -877,14 +1054,11 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Calculate scaling to fit image in canvas (cover mode - fill canvas)
                     const scale = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
                     const w = img.width * scale;
                     const h = img.height * scale;
                     const x = (CANVAS_SIZE - w) / 2;
                     const y = (CANVAS_SIZE - h) / 2;
-
-                    // Draw image centered and scaled
                     drawCtx.drawImage(img, x, y, w, h);
                 };
                 img.src = e.target.result;
@@ -894,7 +1068,7 @@
 
         document.getElementById('imageInput').addEventListener('change', (e) => {
             loadImage(e.target.files[0]);
-            e.target.value = ''; // Reset so same file can be loaded again
+            e.target.value = '';
         });
 
         document.getElementById('cameraInput').addEventListener('change', (e) => {
@@ -907,34 +1081,62 @@
             const deltaTime = (timestamp - lastTime) / 1000;
             lastTime = timestamp;
 
+            // Apply friction when decelerating
+            if (targetRpm === 0 && rpm !== 0) {
+                const frictionForce = friction * 200 * deltaTime;
+                if (Math.abs(rpm) < frictionForce) {
+                    rpm = 0;
+                } else {
+                    rpm -= Math.sign(rpm) * frictionForce;
+                }
+                updateSpeedDisplay();
+            }
+
             // Update rotation
             angle += (rpm / 60) * Math.PI * 2 * deltaTime;
 
-            // Clear display
-            displayCtx.fillStyle = '#1a1a2e';
-            displayCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            // Draw static canvas (no rotation)
+            staticCtx.fillStyle = '#1a1a2e';
+            staticCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-            // Draw rotated canvas
-            displayCtx.save();
-            displayCtx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
-            displayCtx.rotate(angle);
-            displayCtx.translate(-CANVAS_SIZE / 2, -CANVAS_SIZE / 2);
-
-            // Draw either preview (while drawing shapes) or main canvas
-            if (isDrawing && (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect')) {
-                displayCtx.drawImage(previewCanvas, 0, 0);
+            if (isDrawing && activeCanvas === staticCanvas &&
+                (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect')) {
+                staticCtx.drawImage(previewCanvas, 0, 0);
             } else {
-                displayCtx.drawImage(drawCanvas, 0, 0);
+                staticCtx.drawImage(drawCanvas, 0, 0);
             }
 
-            displayCtx.restore();
+            // Clip static to circle
+            staticCtx.globalCompositeOperation = 'destination-in';
+            staticCtx.beginPath();
+            staticCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            staticCtx.fill();
+            staticCtx.globalCompositeOperation = 'source-over';
 
-            // Clip to circle
-            displayCtx.globalCompositeOperation = 'destination-in';
-            displayCtx.beginPath();
-            displayCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2, 0, Math.PI * 2);
-            displayCtx.fill();
-            displayCtx.globalCompositeOperation = 'source-over';
+            // Draw spinning canvas (with rotation)
+            spinningCtx.fillStyle = '#1a1a2e';
+            spinningCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+            spinningCtx.save();
+            spinningCtx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+            spinningCtx.rotate(angle);
+            spinningCtx.translate(-CANVAS_SIZE / 2, -CANVAS_SIZE / 2);
+
+            if (isDrawing && activeCanvas === spinningCanvas &&
+                (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rect')) {
+                spinningCtx.drawImage(previewCanvas, 0, 0);
+            } else {
+                spinningCtx.drawImage(drawCanvas, 0, 0);
+            }
+
+            spinningCtx.restore();
+
+            // Clip spinning to circle
+            spinningCtx.globalCompositeOperation = 'destination-in';
+            spinningCtx.beginPath();
+            spinningCtx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 2, 0, Math.PI * 2);
+            spinningCtx.fill();
+            spinningCtx.globalCompositeOperation = 'source-over';
 
             // Update stats
             document.getElementById('rotation').textContent = Math.round((angle * 180 / Math.PI) % 360) + '°';
